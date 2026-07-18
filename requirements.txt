@@ -1,0 +1,14 @@
+aiogram
+fastapi
+uvicorn
+sqlalchemy
+alembic
+psycopg[binary]
+redis
+python-dotenv
+pydantic
+pydantic-settings
+httpx
+python-chess
+stockfish
+loguru
