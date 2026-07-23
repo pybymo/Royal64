@@ -12,7 +12,7 @@ export function WalletPage() {
 
             <Stack gap={20}>
 
-                <Text>
+                <Text variant="h2">
 
                     Wallet
 
@@ -20,17 +20,49 @@ export function WalletPage() {
 
                 <Text>
 
-                    {wallet.balance} TON
+                    Available Balance
 
                 </Text>
 
                 <Text>
 
-                    Locked :
+                    {wallet.availableBalance} TON
 
-                    {" "}
+                </Text>
 
-                    {wallet.locked}
+                <Text>
+
+                    Locked Balance
+
+                </Text>
+
+                <Text>
+
+                    {wallet.lockedBalance} TON
+
+                </Text>
+
+                <Text>
+
+                    Pending Balance
+
+                </Text>
+
+                <Text>
+
+                    {wallet.pendingBalance} TON
+
+                </Text>
+
+                <Text>
+
+                    Total Balance
+
+                </Text>
+
+                <Text>
+
+                    {wallet.totalBalance} TON
 
                 </Text>
 
