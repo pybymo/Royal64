@@ -1,8 +1,8 @@
 import { Card, Stack, Text } from "@/shared/ui";
 
-import { useProfile } from "@/features/profile/use-profile";
+import { useProfile } from "./use-profile";
 
-export function ProfilePage() {
+export function ProfileCard() {
 
     const { profile } = useProfile();
 

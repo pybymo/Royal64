@@ -1,23 +1,5 @@
-import { Card, Stack, Text } from "@/shared/ui";
+import { ProfileCard } from "@/features/profile";
 
-export function ProfilePage(){
-
-    return(
-
-        <Card>
-
-            <Stack>
-
-                <Text variant="h2">
-
-                    Profile
-
-                </Text>
-
-            </Stack>
-
-        </Card>
-
-    )
-
+export function ProfilePage() {
+    return <ProfileCard />;
 }
