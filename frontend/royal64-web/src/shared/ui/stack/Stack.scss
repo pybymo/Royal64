@@ -1,0 +1,15 @@
+.r64-stack{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.r64-stack.horizontal{
+
+    flex-direction:row;
+
+    align-items:center;
+
+}

@@ -1,0 +1,35 @@
+.r64-button{
+
+    padding:14px 22px;
+
+    border-radius:var(--radius-md);
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.r64-button.primary{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.r64-button.primary:hover{
+
+    background:var(--primary-hover);
+
+}
+
+.r64-button.secondary{
+
+    background:transparent;
+
+    border:1px solid var(--border);
+
+    color:white;
+
+}

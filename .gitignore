@@ -1,47 +1,84 @@
-# Virtual Environment
-.venv/
-
-# Environment Variables
-.env
-
+########################
 # Python
+########################
+
+.venv/
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Distribution
+########################
+# Environment
+########################
+
+.env
+.env.*
+
+########################
+# Build
+########################
+
 build/
 dist/
-*.egg-info/
+frontend/**/dist/
 
+########################
+# Node
+########################
+
+node_modules/
+frontend/**/node_modules/
+
+.pnpm-store/
+.npm/
+
+.vite/
+
+########################
+# Typescript
+########################
+
+*.tsbuildinfo
+
+########################
 # Testing
+########################
+
 .pytest_cache/
 .coverage
 htmlcov/
 
+########################
 # IDE
+########################
+
 .vscode/
 .idea/
 
+########################
 # OS
+########################
+
 .DS_Store
 Thumbs.db
 
+########################
 # Logs
+########################
+
 *.log
 
-# SQLite
-*.sqlite3
+########################
+# Cache
+########################
 
-# Mypy
 .mypy_cache/
-
-# Ruff
 .ruff_cache/
-
-# Pyright
 .pyright/
 
-# Temporary
+########################
+# Temp
+########################
+
 *.tmp
 *.bak

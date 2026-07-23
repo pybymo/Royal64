@@ -1,0 +1,34 @@
+from aiogram import Router
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+
+from bot.keyboards.main_menu import main_menu
+from bot.texts import en
+from database.session import SessionLocal
+from schemas.user import UserCreate
+from services.user_service import UserService
+
+router = Router()
+
+
+@router.message(CommandStart())
+async def start_handler(message: Message):
+
+    async with SessionLocal() as session:
+
+        service = UserService(session)
+
+        await service.register(
+            UserCreate(
+                telegram_id=message.from_user.id,
+                username=message.from_user.username,
+                first_name=message.from_user.first_name,
+                last_name=message.from_user.last_name,
+                language=message.from_user.language_code or "en",
+            )
+        )
+
+    await message.answer(
+        en.WELCOME,
+        reply_markup=main_menu(),
+    )
