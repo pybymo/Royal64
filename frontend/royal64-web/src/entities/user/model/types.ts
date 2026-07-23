@@ -1,4 +1,4 @@
-export interface Profile {
+export interface User {
 
     id: number;
 
@@ -7,12 +7,6 @@ export interface Profile {
     displayName: string;
 
     rating: number;
-
-    games: number;
-
-    wins: number;
-
-    losses: number;
 
     avatarUrl?: string;
 

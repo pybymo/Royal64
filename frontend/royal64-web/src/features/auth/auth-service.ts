@@ -1,6 +1,5 @@
 import { api } from "@/shared/api/http";
-
-import type { User } from "@/shared/types/auth";
+import type { User } from "@/entities/user";
 
 export async function health() {
     return api("/health");
@@ -8,15 +7,16 @@ export async function health() {
 
 export async function loginAsGuest(): Promise<User> {
 
-    // TODO:
-    // بعداً این قسمت به Backend متصل می‌شود.
-
     return {
+
         id: 1,
+
         username: "guest",
-        firstName: "Guest",
-        lastName: "",
+
+        displayName: "Guest",
+
         rating: 1200,
+
     };
 
 }

@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import type { AuthState, User } from "@/shared/types/auth";
+import type { AuthState } from "@/shared/types/auth";
+import type { User } from "@/entities/user";
 
 interface Store extends AuthState {
     login(user: User): void;
