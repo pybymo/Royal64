@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { health } from "@/features/auth";
 
-export function usePing() {
+export function useDashboard() {
 
     return useQuery({
 
