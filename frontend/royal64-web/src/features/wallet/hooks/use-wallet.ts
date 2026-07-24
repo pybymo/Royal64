@@ -1,4 +1,4 @@
-import { useWalletStore } from "./wallet-store";
+import { useWalletStore } from "../model/wallet-store";
 
 export function useWallet() {
 

@@ -1,6 +1,6 @@
 import { Card, Stack, Text } from "@/shared/ui";
 
-import { WalletCard } from "@/widgets/walletcard";
+import { WalletCard } from "@/features/wallet";
 import { StatsCard } from "@/widgets/statscard";
 
 import { usePing } from "./hooks";
@@ -15,7 +15,7 @@ export function Dashboard() {
 
         <Stack gap={24}>
 
-            <WalletCard balance={10.35} />
+            <WalletCard />
 
             <StatsCard title="Wins" value="25" />
 
