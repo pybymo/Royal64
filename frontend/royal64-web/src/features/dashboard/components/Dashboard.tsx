@@ -7,8 +7,10 @@ import { WalletCard } from "@/features/wallet";
 
 import { DashboardActions } from "./DashboardActions";
 import { RecentGames } from "./RecentGames";
-import { ActiveOffers } from "./ActiveOffers";
 import { OnlinePlayers } from "./OnlinePlayers";
+
+import { OfferList } from "@/features/matchmaking";
+
 
 export function Dashboard() {
 
@@ -22,7 +24,7 @@ export function Dashboard() {
 
             <DashboardActions />
 
-            <ActiveOffers />
+            <OfferList />
 
             <RecentGames />
 
