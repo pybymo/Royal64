@@ -1,7 +1,6 @@
 import { Button, Card, Stack, Text } from "@/shared/ui";
 
-import { loginAsGuest } from "@/features/auth/auth-service";
-import { useAuthStore } from "@/features/auth/auth-store";
+import { loginAsGuest, useAuthStore } from "@/features/auth";
 
 export function LoginPage() {
 

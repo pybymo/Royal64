@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/shared/hooks/use-auth";
+import { useAuth } from "@/features/auth";
 
 export function AuthGuard({ children }: PropsWithChildren) {
 

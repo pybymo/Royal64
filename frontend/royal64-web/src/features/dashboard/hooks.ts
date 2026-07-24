@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { health } from "@/features/auth/auth-service";
+import { health } from "@/features/auth";
 
 export function usePing() {
 
