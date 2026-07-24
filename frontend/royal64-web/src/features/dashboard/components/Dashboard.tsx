@@ -1,11 +1,14 @@
 import { Stack } from "@/shared/ui";
 
-import { WalletCard } from "@/features/wallet";
-
 import { Header } from "@/widgets/header";
 import { BottomNavigation } from "@/widgets/bottomnavigation";
 
+import { WalletCard } from "@/features/wallet";
+
 import { DashboardActions } from "./DashboardActions";
+import { RecentGames } from "./RecentGames";
+import { ActiveOffers } from "./ActiveOffers";
+import { OnlinePlayers } from "./OnlinePlayers";
 
 export function Dashboard() {
 
@@ -18,6 +21,12 @@ export function Dashboard() {
             <WalletCard />
 
             <DashboardActions />
+
+            <ActiveOffers />
+
+            <RecentGames />
+
+            <OnlinePlayers />
 
             <BottomNavigation />
 
