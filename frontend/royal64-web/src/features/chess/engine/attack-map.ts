@@ -1,68 +1,90 @@
+import type { Square } from "@/features/chess/services/legal-moves";
+
 import {
 
-    dispatchMoves,
+    pawnAttacks,
 
-} from "./move-dispatcher";
+    knightMoves,
 
-import type {
+    bishopMoves,
 
-    Square,
+    rookMoves,
 
-} from "@/features/chess/services/legal-moves";
+    queenMoves,
+
+    kingMoves,
+
+} from "@/features/chess/rules";
 
 export function buildAttackMap(
-
     board: string[]
-
 ): Square[] {
 
     const attacks: Square[] = [];
 
-    for (
+    for (let row = 0; row < 8; row++) {
 
-        let row = 0;
+        for (let col = 0; col < 8; col++) {
 
-        row < 8;
+            const piece = board[row][col];
 
-        row++
-
-    ) {
-
-        for (
-
-            let col = 0;
-
-            col < 8;
-
-            col++
-
-        ) {
-
-            const piece =
-
-                board[row][col];
-
-            if (
-
-                piece === "."
-
-            )
+            if (piece === ".") {
 
                 continue;
 
-            attacks.push(
+            }
 
-                ...dispatchMoves(
+            switch (piece.toLowerCase()) {
 
-                    board,
+                case "p":
 
-                    row,
+                    attacks.push(
+                        ...pawnAttacks(board, row, col)
+                    );
 
-                    col
+                    break;
 
-                )
+                case "n":
 
-            );
+                    attacks.push(
+                        ...knightMoves(board, row, col)
+                    );
+
+                    break;
+
+                case "b":
+
+                    attacks.push(
+                        ...bishopMoves(board, row, col)
+                    );
+
+                    break;
+
+                case "r":
+
+                    attacks.push(
+                        ...rookMoves(board, row, col)
+                    );
+
+                    break;
+
+                case "q":
+
+                    attacks.push(
+                        ...queenMoves(board, row, col)
+                    );
+
+                    break;
+
+                case "k":
+
+                    attacks.push(
+                        ...kingMoves(board, row, col)
+                    );
+
+                    break;
+
+            }
 
         }
 
