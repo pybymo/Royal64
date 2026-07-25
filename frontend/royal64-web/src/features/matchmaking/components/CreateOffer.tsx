@@ -1,14 +1,18 @@
-import { Button } from "@/shared/ui";
+import { Card, Button } from "@/shared/ui";
 
 export function CreateOffer() {
 
     return (
 
-        <Button>
+        <Card>
 
-            Create Offer
+            <Button>
 
-        </Button>
+                Create Offer
+
+            </Button>
+
+        </Card>
 
     );
 

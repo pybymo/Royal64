@@ -1,16 +1,43 @@
+import { useMemo } from "react";
+
 import { useWalletStore } from "@/features/wallet";
 import { useLedgerStore } from "@/features/ledger";
-import { buildWalletProjection } from "@/features/wallet";
+
+import { projectWallet } from "@/features/wallet";
 
 export function useWallet() {
 
-    const wallet = useWalletStore((s) => s.wallet);
+    const wallet = useWalletStore(
 
-    const entries = useLedgerStore((s) => s.entries);
+        (state) => state.wallet
+
+    );
+
+    const entries = useLedgerStore(
+
+        (state) => state.entries
+
+    );
+
+    const projected = useMemo(
+
+        () =>
+
+            projectWallet(
+
+                wallet,
+
+                entries
+
+            ),
+
+        [wallet, entries]
+
+    );
 
     return {
 
-        wallet: buildWalletProjection(wallet, entries),
+        wallet: projected,
 
     };
 

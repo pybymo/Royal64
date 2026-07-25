@@ -20,53 +20,41 @@ export function WalletCard() {
 
                 </Text>
 
-                <Stack gap={6}>
+                <Text>
 
-                    <Text variant="small">
+                    Available
 
-                        Available Balance
+                </Text>
 
-                    </Text>
+                <Text>
 
-                    <Text>
+                    {wallet.availableBalance.toFixed(2)} TON
 
-                        {wallet.availableBalance.toFixed(2)} TON
+                </Text>
 
-                    </Text>
+                <Text>
 
-                </Stack>
+                    Locked
 
-                <Stack gap={6}>
+                </Text>
 
-                    <Text variant="small">
+                <Text>
 
-                        Locked Balance
+                    {wallet.lockedBalance.toFixed(2)} TON
 
-                    </Text>
+                </Text>
 
-                    <Text>
+                <Text>
 
-                        {wallet.lockedBalance.toFixed(2)} TON
+                    Total
 
-                    </Text>
+                </Text>
 
-                </Stack>
+                <Text>
 
-                <Stack gap={6}>
+                    {wallet.totalBalance.toFixed(2)} TON
 
-                    <Text variant="small">
-
-                        Total Balance
-
-                    </Text>
-
-                    <Text variant="h2">
-
-                        {wallet.totalBalance.toFixed(2)} TON
-
-                    </Text>
-
-                </Stack>
+                </Text>
 
                 <Button>
 

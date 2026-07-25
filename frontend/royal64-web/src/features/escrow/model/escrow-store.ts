@@ -6,7 +6,7 @@ interface EscrowStore {
 
     escrows: Escrow[];
 
-    setEscrows(escrows: Escrow[]): void;
+    add(escrow: Escrow): void;
 
 }
 
@@ -14,13 +14,13 @@ export const useEscrowStore = create<EscrowStore>((set) => ({
 
     escrows: [],
 
-    setEscrows(escrows) {
+    add(escrow) {
 
-        set({
+        set((state) => ({
 
-            escrows,
+            escrows: [...state.escrows, escrow],
 
-        });
+        }));
 
     },
 

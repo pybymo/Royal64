@@ -2,13 +2,21 @@ import { Card, Stack, Text, Button } from "@/shared/ui";
 
 import type { Offer } from "@/entities/offer";
 
+import { useAcceptOffer } from "@/features/matchmaking";
+
 interface Props {
 
     offer: Offer;
 
 }
 
-export function OfferCard({ offer }: Props) {
+export function OfferCard({
+
+    offer,
+
+}: Props) {
+
+    const { accept } = useAcceptOffer();
 
     return (
 
@@ -30,19 +38,31 @@ export function OfferCard({ offer }: Props) {
 
                 <Text>
 
-                    Status: {offer.status}
+                    {offer.status}
 
                 </Text>
 
                 <Text>
 
-                    {offer.isPrivate ? "Private Match" : "Public Match"}
+                    {offer.isPrivate
+
+                        ? "Private"
+
+                        : "Public"}
 
                 </Text>
 
-                <Button>
+                <Button
 
-                    Accept
+                    onClick={() =>
+
+                        accept(offer)
+
+                    }
+
+                >
+
+                    Accept Offer
 
                 </Button>
 

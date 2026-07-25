@@ -1,9 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
-import { getLedger } from "@/features/ledger";
+import { useLedgerStore } from "@/features/ledger";
 
 export function useLedger() {
-    return useQuery({
-        queryKey: ["ledger"],
-        queryFn: getLedger,
-    });
+
+    const entries = useLedgerStore(
+
+        (state) => state.entries
+
+    );
+
+    return {
+
+        entries,
+
+    };
+
 }

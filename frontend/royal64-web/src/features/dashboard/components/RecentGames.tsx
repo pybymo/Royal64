@@ -1,13 +1,23 @@
-import { Card, Stack, Text } from "@/shared/ui";
+import { useCurrentMatch } from "@/features/match";
+
+import { Text } from "@/shared/ui";
 
 export function RecentGames() {
-    return (
-        <Card>
-            <Stack gap={10}>
-                <Text variant="h2">Recent Games</Text>
 
-                <Text>No games yet.</Text>
-            </Stack>
-        </Card>
+    const { match } = useCurrentMatch();
+
+    if (!match)
+
+        return <Text>No Active Match</Text>;
+
+    return (
+
+        <Text>
+
+            Active Match #{match.id}
+
+        </Text>
+
     );
+
 }

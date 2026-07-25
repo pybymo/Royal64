@@ -22,6 +22,8 @@ export interface Match {
 
     bestOf: 1 | 3;
 
+    currentGame: number;
+
     createdAt: string;
 
     startedAt?: string;
