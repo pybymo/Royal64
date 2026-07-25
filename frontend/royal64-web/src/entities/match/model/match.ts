@@ -1,11 +1,12 @@
-import type { Currency } from "@/entities/wallet";
-
 export type MatchStatus =
     | "waiting"
-    | "active"
+    | "playing"
     | "finished"
-    | "cancelled"
-    | "expired";
+    | "cancelled";
+
+export type MatchType =
+    | "bo1"
+    | "bo3";
 
 export interface Match {
 
@@ -15,18 +16,22 @@ export interface Match {
 
     blackPlayerId: number;
 
-    winnerId?: number;
-
     stake: number;
 
-    currency: Currency;
+    currency: "TON";
+
+    matchType: MatchType;
+
+    timeControl: string;
 
     status: MatchStatus;
+
+    winnerId?: number;
 
     createdAt: string;
 
     startedAt?: string;
 
-    endedAt?: string;
+    finishedAt?: string;
 
 }

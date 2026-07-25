@@ -16,8 +16,6 @@ export interface Wallet {
 
     lockedBalance: number;
 
-    pendingBalance: number;
-
     createdAt: string;
 
     updatedAt: string;

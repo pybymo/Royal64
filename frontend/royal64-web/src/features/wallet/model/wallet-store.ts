@@ -8,6 +8,8 @@ interface WalletStore {
 
     setAvailableBalance(value: number): void;
 
+    setLockedBalance(value: number): void;
+
 }
 
 export const useWalletStore = create<WalletStore>((set) => ({
@@ -28,8 +30,6 @@ export const useWalletStore = create<WalletStore>((set) => ({
 
         lockedBalance: 0,
 
-        pendingBalance: 0,
-
         createdAt: new Date().toISOString(),
 
         updatedAt: new Date().toISOString(),
@@ -47,9 +47,34 @@ export const useWalletStore = create<WalletStore>((set) => ({
                 availableBalance: value,
 
                 totalBalance:
+
                     value +
-                    state.wallet.lockedBalance +
-                    state.wallet.pendingBalance,
+
+                    state.wallet.lockedBalance,
+
+                updatedAt: new Date().toISOString(),
+
+            },
+
+        }));
+
+    },
+
+    setLockedBalance(value) {
+
+        set((state) => ({
+
+            wallet: {
+
+                ...state.wallet,
+
+                lockedBalance: value,
+
+                totalBalance:
+
+                    state.wallet.availableBalance +
+
+                    value,
 
                 updatedAt: new Date().toISOString(),
 

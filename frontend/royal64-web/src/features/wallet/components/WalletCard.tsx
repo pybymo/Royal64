@@ -1,6 +1,7 @@
 import "./WalletCard.scss";
 
 import { Card, Stack, Text, Button } from "@/shared/ui";
+
 import { useWallet } from "@/features/wallet";
 
 export function WalletCard() {
@@ -14,43 +15,63 @@ export function WalletCard() {
             <Stack gap={20}>
 
                 <Text variant="h2">
+
                     Wallet
+
                 </Text>
 
-                <Text>
-                    Available Balance
-                </Text>
+                <Stack gap={6}>
 
-                <Text>
-                    {wallet.availableBalance} TON
-                </Text>
+                    <Text variant="small">
 
-                <Text>
-                    Locked Balance
-                </Text>
+                        Available Balance
 
-                <Text>
-                    {wallet.lockedBalance} TON
-                </Text>
+                    </Text>
 
-                <Text>
-                    Pending Balance
-                </Text>
+                    <Text>
 
-                <Text>
-                    {wallet.pendingBalance} TON
-                </Text>
+                        {wallet.availableBalance.toFixed(2)} TON
 
-                <Text>
-                    Total Balance
-                </Text>
+                    </Text>
 
-                <Text>
-                    {wallet.totalBalance.toFixed(2)} TON
-                </Text>
+                </Stack>
+
+                <Stack gap={6}>
+
+                    <Text variant="small">
+
+                        Locked Balance
+
+                    </Text>
+
+                    <Text>
+
+                        {wallet.lockedBalance.toFixed(2)} TON
+
+                    </Text>
+
+                </Stack>
+
+                <Stack gap={6}>
+
+                    <Text variant="small">
+
+                        Total Balance
+
+                    </Text>
+
+                    <Text variant="h2">
+
+                        {wallet.totalBalance.toFixed(2)} TON
+
+                    </Text>
+
+                </Stack>
 
                 <Button>
+
                     Deposit
+
                 </Button>
 
             </Stack>

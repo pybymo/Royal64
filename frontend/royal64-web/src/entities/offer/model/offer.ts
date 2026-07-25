@@ -1,12 +1,12 @@
 import type { Currency } from "@/entities/wallet";
 
-export type MatchOfferStatus =
+export type OfferStatus =
     | "open"
     | "accepted"
     | "cancelled"
     | "expired";
 
-export interface MatchOffer {
+export interface Offer {
 
     id: number;
 
@@ -18,7 +18,7 @@ export interface MatchOffer {
 
     currency: Currency;
 
-    status: MatchOfferStatus;
+    status: OfferStatus;
 
     isPrivate: boolean;
 
