@@ -2,6 +2,8 @@ import { ChessPiece } from "./ChessPiece";
 
 import { selectSquare } from "@/features/chess/services";
 
+import { useBoard } from "@/features/chess";
+
 interface Props {
 
     row: number;
@@ -25,6 +27,18 @@ export function ChessSquare({
     dark,
 
 }: Props) {
+
+    const {
+
+        selected,
+
+    } = useBoard();
+
+    const active =
+
+        selected?.row === row &&
+
+        selected?.col === col;
 
     return (
 
@@ -55,6 +69,10 @@ export function ChessSquare({
                 alignItems: "center",
 
                 cursor: "pointer",
+
+                border: active
+                    ? "3px solid #ff9800"
+                    : "1px solid #999",
 
                 background:
 

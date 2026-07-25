@@ -1,1 +1,1 @@
-export * from "./antiCheatLog";
+export {};
