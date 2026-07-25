@@ -1,42 +1,103 @@
 import { useBoardStore } from "@/features/chess";
 
-import { isInCheck } from "@/features/chess/engine";
+import {
+
+    isInCheck,
+
+    isCheckmate,
+
+} from "@/features/chess/engine";
 
 export function movePiece(
+
     fromRow: number,
+
     fromCol: number,
+
     toRow: number,
+
     toCol: number
+
 ) {
 
-    const state = useBoardStore.getState();
+    const state =
 
-    const board = state.board.map(
-        (row) => row.split("")
-    );
+        useBoardStore.getState();
 
-    const movingPiece = board[fromRow][fromCol];
+    const board =
 
-    board[toRow][toCol] = movingPiece;
+        state.board.map(
+
+            (r) => r.split("")
+
+        );
+
+    const movingPiece =
+
+        board[fromRow][fromCol];
+
+    board[toRow][toCol] =
+        movingPiece;
+
     board[fromRow][fromCol] = ".";
 
-    const updatedBoard = board.map(
-        (row) => row.join("")
+    const updatedBoard =
+
+        board.map(
+
+            (r) => r.join("")
+
+        );
+
+    state.setBoard(
+
+        updatedBoard
+
     );
 
-    state.setBoard(updatedBoard);
-
     const movingWhite =
-        movingPiece === movingPiece.toUpperCase();
+
+        movingPiece ===
+
+        movingPiece.toUpperCase();
 
     if (
+
         isInCheck(
+
             updatedBoard,
-            movingWhite
+
+            !movingWhite
+
         )
+
     ) {
 
-        console.warn("CHECK");
+        console.warn(
+
+            "CHECK"
+
+        );
+
+    }
+
+    if (
+
+        isCheckmate(
+
+            updatedBoard,
+
+            !movingWhite
+
+        )
+
+    ) {
+
+        console.warn(
+
+            "CHECKMATE"
+
+        );
 
     }
 
