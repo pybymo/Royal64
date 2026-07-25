@@ -1,12 +1,12 @@
 import { create } from "zustand";
 
-import type { MatchOffer } from "@/shared/types/offer";
+import type { Offer } from "@/entities/offer";
 
 interface OfferStore {
 
-    offers: MatchOffer[];
+    offers: Offer[];
 
-    setOffers(offers: MatchOffer[]): void;
+    setOffers(offers: Offer[]): void;
 
 }
 

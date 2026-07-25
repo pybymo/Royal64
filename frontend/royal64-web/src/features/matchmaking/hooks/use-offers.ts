@@ -1,25 +1,15 @@
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-import { fetchOffers } from "../api/offer-service";
-
-import { useOfferStore } from "../model/offer-store";
+import { getOffers } from "@/features/matchmaking";
 
 export function useOffers() {
 
-    const offers = useOfferStore((s) => s.offers);
+    return useQuery({
 
-    const setOffers = useOfferStore((s) => s.setOffers);
+        queryKey: ["offers"],
 
-    useEffect(() => {
+        queryFn: getOffers,
 
-        fetchOffers().then(setOffers);
-
-    }, [setOffers]);
-
-    return {
-
-        offers,
-
-    };
+    });
 
 }

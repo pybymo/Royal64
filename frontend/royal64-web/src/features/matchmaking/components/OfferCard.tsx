@@ -1,10 +1,10 @@
 import { Card, Stack, Text, Button } from "@/shared/ui";
 
-import type { MatchOffer } from "@/shared/types/offer";
+import type { Offer } from "@/entities/offer";
 
 interface Props {
 
-    offer: MatchOffer;
+    offer: Offer;
 
 }
 
@@ -18,7 +18,7 @@ export function OfferCard({ offer }: Props) {
 
                 <Text variant="h2">
 
-                    {offer.creatorName}
+                    Offer #{offer.id}
 
                 </Text>
 
@@ -30,13 +30,13 @@ export function OfferCard({ offer }: Props) {
 
                 <Text>
 
-                    Time Control: {offer.timeControl}
+                    Status: {offer.status}
 
                 </Text>
 
                 <Text>
 
-                    {offer.rated ? "Rated" : "Casual"}
+                    {offer.isPrivate ? "Private Match" : "Public Match"}
 
                 </Text>
 

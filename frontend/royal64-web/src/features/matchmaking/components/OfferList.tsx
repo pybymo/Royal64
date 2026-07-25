@@ -1,25 +1,22 @@
 import { Stack } from "@/shared/ui";
 
-import { useOffers } from "../hooks/use-offers";
-
 import { OfferCard } from "./OfferCard";
+
+import { useOffers } from "@/features/matchmaking";
 
 export function OfferList() {
 
-    const { offers } = useOffers();
+    const { data: offers = [] } = useOffers();
 
     return (
 
-        <Stack gap={15}>
+        <Stack gap={12}>
 
             {offers.map((offer) => (
 
                 <OfferCard
-
                     key={offer.id}
-
                     offer={offer}
-
                 />
 
             ))}

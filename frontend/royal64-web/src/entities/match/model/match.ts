@@ -1,32 +1,26 @@
 export type MatchStatus =
     | "waiting"
+    | "funding"
+    | "ready"
     | "playing"
     | "finished"
     | "cancelled";
-
-export type MatchType =
-    | "bo1"
-    | "bo3";
 
 export interface Match {
 
     id: number;
 
-    whitePlayerId: number;
+    playerOneId: number;
 
-    blackPlayerId: number;
+    playerTwoId: number;
 
-    stake: number;
+    escrowId: number;
 
-    currency: "TON";
-
-    matchType: MatchType;
-
-    timeControl: string;
+    winnerId?: number;
 
     status: MatchStatus;
 
-    winnerId?: number;
+    bestOf: 1 | 3;
 
     createdAt: string;
 

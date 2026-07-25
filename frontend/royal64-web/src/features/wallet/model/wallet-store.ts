@@ -6,9 +6,7 @@ interface WalletStore {
 
     wallet: Wallet;
 
-    setAvailableBalance(value: number): void;
-
-    setLockedBalance(value: number): void;
+    setWallet(wallet: Wallet): void;
 
 }
 
@@ -36,51 +34,13 @@ export const useWalletStore = create<WalletStore>((set) => ({
 
     },
 
-    setAvailableBalance(value) {
+    setWallet(wallet) {
 
-        set((state) => ({
+        set({
 
-            wallet: {
+            wallet,
 
-                ...state.wallet,
-
-                availableBalance: value,
-
-                totalBalance:
-
-                    value +
-
-                    state.wallet.lockedBalance,
-
-                updatedAt: new Date().toISOString(),
-
-            },
-
-        }));
-
-    },
-
-    setLockedBalance(value) {
-
-        set((state) => ({
-
-            wallet: {
-
-                ...state.wallet,
-
-                lockedBalance: value,
-
-                totalBalance:
-
-                    state.wallet.availableBalance +
-
-                    value,
-
-                updatedAt: new Date().toISOString(),
-
-            },
-
-        }));
+        });
 
     },
 
