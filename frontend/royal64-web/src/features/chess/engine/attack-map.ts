@@ -1,104 +1,139 @@
 import type {
-
     Square,
-
 } from "@/features/chess/services/legal-moves";
 
 import {
-
-    dispatchMoves,
-
-} from "./move-dispatcher";
-
-import {
-
     pawnAttacks,
-
 } from "@/features/chess/rules";
 
-export function buildAttackMap(
+import {
+    dispatchMoves,
+} from "./move-dispatcher";
 
-    board: string[]
 
+function kingAttacks(
+    row: number,
+    col: number
 ): Square[] {
 
     const attacks: Square[] = [];
 
-    for (
+    for (const [dr, dc] of [
+        [-1,-1],
+        [-1,0],
+        [-1,1],
+        [0,-1],
+        [0,1],
+        [1,-1],
+        [1,0],
+        [1,1],
+    ]) {
 
-        let row = 0;
+        const r = row + dr;
+        const c = col + dc;
 
-        row < 8;
-
-        row++
-
-    ) {
-
-        for (
-
-            let col = 0;
-
-            col < 8;
-
-            col++
-
+        if (
+            r >=0 &&
+            r <8 &&
+            c >=0 &&
+            c <8
         ) {
 
-            const piece =
+            attacks.push({
+                row:r,
+                col:c,
+            });
 
+        }
+    }
+
+    return attacks;
+}
+
+
+export function buildAttackMap(
+    board:string[],
+    attackerWhite:boolean
+):Square[] {
+
+
+    const attacks:Square[]=[];
+
+
+    for(let row=0; row<8; row++){
+
+        for(let col=0; col<8; col++){
+
+
+            const piece =
                 board[row][col];
 
-            if (
 
-                piece === "."
-
-            ) {
-
+            if(piece === ".")
                 continue;
 
-            }
 
-            if (
 
-                piece.toLowerCase() === "p"
+            const white =
+                piece === piece.toUpperCase();
 
-            ) {
+
+
+            if(
+                white !== attackerWhite
+            )
+                continue;
+
+
+
+            const type =
+                piece.toLowerCase();
+
+
+
+            if(type==="p"){
 
                 attacks.push(
-
                     ...pawnAttacks(
-
                         board,
-
                         row,
-
                         col
-
                     )
-
                 );
 
                 continue;
 
             }
 
+
+
+            if(type==="k"){
+
+                attacks.push(
+                    ...kingAttacks(
+                        row,
+                        col
+                    )
+                );
+
+                continue;
+
+            }
+
+
+
             attacks.push(
-
                 ...dispatchMoves(
-
                     board,
-
                     row,
-
                     col
-
                 )
-
             );
 
         }
 
     }
+
 
     return attacks;
 

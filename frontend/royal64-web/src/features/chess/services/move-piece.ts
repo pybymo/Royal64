@@ -1,14 +1,32 @@
 import { useBoardStore } from "@/features/chess";
 
 import {
-    isInCheck,
+    boardToFen,
+} from "@/features/chess/services";
+
+import {
     isCheckmate,
+    isInCheck,
+    isInsufficientMaterial,
+    isStalemate,
+} from "@/features/chess/engine";
+
+import {
+
+    isThreefoldRepetition,
+
 } from "@/features/chess/engine";
 
 import {
     needsPromotion,
     usePromotionStore,
 } from "@/features/chess/promotion";
+
+import {
+
+    isFiftyMoveRule,
+
+} from "@/features/chess/engine";
 
 export function movePiece(
 
@@ -56,13 +74,13 @@ export function movePiece(
 
     }
 
-    board[toRow][toCol] =
+    /*
+     * NORMAL MOVE
+     */
 
-        movingPiece;
+    board[toRow][toCol] = movingPiece;
 
-    board[fromRow][fromCol] =
-
-        ".";
+    board[fromRow][fromCol] = ".";
 
     /*
      * CASTLING
@@ -81,10 +99,7 @@ export function movePiece(
 
         ) {
 
-            board[fromRow][5] =
-
-                board[fromRow][7];
-
+            board[fromRow][5] = board[fromRow][7];
             board[fromRow][7] = ".";
 
         }
@@ -96,10 +111,7 @@ export function movePiece(
 
         ) {
 
-            board[fromRow][3] =
-
-                board[fromRow][0];
-
+            board[fromRow][3] = board[fromRow][0];
             board[fromRow][0] = ".";
 
         }
@@ -118,6 +130,13 @@ export function movePiece(
 
         updatedBoard
 
+    );
+
+    state.addPosition(
+        boardToFen(
+            updatedBoard,
+            !white
+        )
     );
 
     /*
@@ -148,13 +167,15 @@ export function movePiece(
 
     ) {
 
-        if (white)
+        if (white) {
 
             state.whiteKingMoved = true;
 
-        else
+        } else {
 
             state.blackKingMoved = true;
+
+        }
 
     }
 
@@ -189,6 +210,28 @@ export function movePiece(
                 state.blackRightRookMoved = true;
 
         }
+
+    }
+
+    /*
+    * HALF MOVE CLOCK
+    */
+
+    if (
+
+        movingPiece.toLowerCase() === "p" ||
+
+        board[toRow][toCol] !== "."
+
+    ) {
+
+        state.resetHalfMove();
+
+    }
+
+    else {
+
+        state.incrementHalfMove();
 
     }
 
@@ -262,13 +305,109 @@ export function movePiece(
 
     ) {
 
+        console.warn("CHECKMATE");
+
+        return;
+
+    }
+
+    /*
+     * STALEMATE
+     */
+
+    /*
+    * THREEFOLD REPETITION
+    */
+
+    /*
+    * FIFTY MOVE RULE
+    */
+
+    if (
+
+        isFiftyMoveRule(
+
+            state.halfMoveClock
+
+        )
+
+    ) {
+
         console.warn(
 
-            "CHECKMATE"
+            "DRAW - FIFTY MOVE RULE"
 
         );
 
+        return;
+
     }
+
+    if (
+
+        isThreefoldRepetition(
+
+            state.history
+
+        )
+
+    ) {
+
+        console.warn(
+
+            "DRAW - THREEFOLD"
+
+        );
+
+        return;
+
+    }
+
+    if (
+
+        isStalemate(
+
+            updatedBoard,
+
+            !white
+
+        )
+
+    ) {
+
+        console.warn("STALEMATE");
+
+        return;
+
+    }
+
+    /*
+    * INSUFFICIENT MATERIAL
+    */
+
+    if (
+
+        isInsufficientMaterial(
+
+            updatedBoard
+
+        )
+
+    ) {
+
+        console.warn(
+
+            "DRAW - INSUFFICIENT MATERIAL"
+
+        );
+
+        return;
+
+    }
+
+    /*
+     * END TURN
+     */
 
     state.clearSelection();
 

@@ -1,37 +1,32 @@
 import type {
-
     Square,
-
 } from "@/features/chess/services/legal-moves";
 
-import { useBoardStore } from "@/features/chess";
+import {
+    useBoardStore,
+} from "@/features/chess";
+
 
 import {
-
     buildAttackMap,
-
 } from "@/features/chess/engine";
 
-function attacked(
 
+function isAttacked(
     attacks: Square[],
-
     row: number,
-
     col: number
-
-) {
+): boolean {
 
     return attacks.some(
-
-        (s) =>
-
-            s.row === row &&
-            s.col === col
-
+        (square) =>
+            square.row === row &&
+            square.col === col
     );
 
 }
+
+
 
 export function castlingMoves(
 
@@ -43,39 +38,72 @@ export function castlingMoves(
 
 ): Square[] {
 
+
     const moves: Square[] = [];
 
-    const piece = board[row][col];
+
+    const piece =
+        board[row][col];
+
 
     if (
-
         piece.toLowerCase() !== "k"
-
-    )
+    ) {
 
         return moves;
+
+    }
+
+
 
     const state =
-
         useBoardStore.getState();
 
-    const white =
 
+
+    const white =
         piece === piece.toUpperCase();
 
-    const attacks =
 
-        buildAttackMap(board);
 
+    /*
+        برای سفید:
+        باید حملات سیاه را چک کنیم
+
+        برای سیاه:
+        باید حملات سفید را چک کنیم
+    */
+
+    const enemyAttacks =
+        buildAttackMap(
+            board,
+            !white
+        );
+
+
+
+    // پادشاه الان در کیش است
     if (
-
-        attacked(attacks, row, 4)
-
-    )
+        isAttacked(
+            enemyAttacks,
+            row,
+            col
+        )
+    ) {
 
         return moves;
 
+    }
+
+
+
+    /*
+        WHITE KING SIDE
+        e1 -> g1
+    */
+
     if (white) {
+
 
         if (
 
@@ -83,27 +111,43 @@ export function castlingMoves(
 
             !state.whiteRightRookMoved &&
 
-            board[row][5] === "." &&
+            board[7][7] === "R" &&
 
-            board[row][6] === "." &&
+            board[7][5] === "." &&
 
-            board[row][7] === "R" &&
+            board[7][6] === "." &&
 
-            !attacked(attacks, row, 5) &&
 
-            !attacked(attacks, row, 6)
+            !isAttacked(
+                enemyAttacks,
+                7,
+                5
+            ) &&
+
+            !isAttacked(
+                enemyAttacks,
+                7,
+                6
+            )
 
         ) {
 
             moves.push({
 
-                row,
+                row: 7,
 
                 col: 6,
 
             });
 
         }
+
+
+
+        /*
+            WHITE QUEEN SIDE
+            e1 -> c1
+        */
 
         if (
 
@@ -111,23 +155,30 @@ export function castlingMoves(
 
             !state.whiteLeftRookMoved &&
 
-            board[row][1] === "." &&
+            board[7][0] === "R" &&
 
-            board[row][2] === "." &&
+            board[7][1] === "." &&
+            board[7][2] === "." &&
+            board[7][3] === "." &&
 
-            board[row][3] === "." &&
 
-            board[row][0] === "R" &&
+            !isAttacked(
+                enemyAttacks,
+                7,
+                3
+            ) &&
 
-            !attacked(attacks, row, 3) &&
-
-            !attacked(attacks, row, 2)
+            !isAttacked(
+                enemyAttacks,
+                7,
+                2
+            )
 
         ) {
 
             moves.push({
 
-                row,
+                row: 7,
 
                 col: 2,
 
@@ -135,7 +186,17 @@ export function castlingMoves(
 
         }
 
+
+
     } else {
+
+
+
+        /*
+            BLACK KING SIDE
+            e8 -> g8
+        */
+
 
         if (
 
@@ -143,21 +204,30 @@ export function castlingMoves(
 
             !state.blackRightRookMoved &&
 
-            board[row][5] === "." &&
+            board[0][7] === "r" &&
 
-            board[row][6] === "." &&
+            board[0][5] === "." &&
 
-            board[row][7] === "r" &&
+            board[0][6] === "." &&
 
-            !attacked(attacks, row, 5) &&
 
-            !attacked(attacks, row, 6)
+            !isAttacked(
+                enemyAttacks,
+                0,
+                5
+            ) &&
+
+            !isAttacked(
+                enemyAttacks,
+                0,
+                6
+            )
 
         ) {
 
             moves.push({
 
-                row,
+                row: 0,
 
                 col: 6,
 
@@ -165,29 +235,43 @@ export function castlingMoves(
 
         }
 
+
+
+        /*
+            BLACK QUEEN SIDE
+            e8 -> c8
+        */
+
         if (
 
             !state.blackKingMoved &&
 
             !state.blackLeftRookMoved &&
 
-            board[row][1] === "." &&
+            board[0][0] === "r" &&
 
-            board[row][2] === "." &&
+            board[0][1] === "." &&
+            board[0][2] === "." &&
+            board[0][3] === "." &&
 
-            board[row][3] === "." &&
 
-            board[row][0] === "r" &&
+            !isAttacked(
+                enemyAttacks,
+                0,
+                3
+            ) &&
 
-            !attacked(attacks, row, 3) &&
-
-            !attacked(attacks, row, 2)
+            !isAttacked(
+                enemyAttacks,
+                0,
+                2
+            )
 
         ) {
 
             moves.push({
 
-                row,
+                row: 0,
 
                 col: 2,
 
@@ -196,6 +280,8 @@ export function castlingMoves(
         }
 
     }
+
+
 
     return moves;
 

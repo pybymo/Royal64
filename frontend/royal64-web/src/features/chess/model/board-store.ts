@@ -29,6 +29,20 @@ interface BoardStore {
     blackLeftRookMoved: boolean;
     blackRightRookMoved: boolean;
 
+    history: string[];
+
+    halfMoveClock: number;
+
+    fullMoveNumber: number;
+
+    addPosition(position: string): void;
+
+    incrementHalfMove(): void;
+
+    resetHalfMove(): void;
+
+    nextFullMove(): void;
+
     setBoard(board: string[]): void;
 
     setLastMove(move: LastMove): void;
@@ -74,6 +88,62 @@ export const useBoardStore = create<BoardStore>((set) => ({
 
     blackLeftRookMoved: false,
     blackRightRookMoved: false,
+
+    history: [],
+
+    halfMoveClock: 0,
+
+    fullMoveNumber: 1,
+
+    addPosition(position) {
+
+    set((state) => ({
+
+        history: [
+
+            ...state.history,
+
+            position,
+
+        ],
+
+    }));
+
+},
+
+incrementHalfMove() {
+
+    set((state) => ({
+
+        halfMoveClock:
+
+            state.halfMoveClock + 1,
+
+    }));
+
+},
+
+resetHalfMove() {
+
+    set({
+
+        halfMoveClock: 0,
+
+    });
+
+},
+
+nextFullMove() {
+
+    set((state) => ({
+
+        fullMoveNumber:
+
+            state.fullMoveNumber + 1,
+
+    }));
+
+},
 
     setBoard(board) {
 
