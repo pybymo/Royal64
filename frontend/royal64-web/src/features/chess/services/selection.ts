@@ -1,61 +1,62 @@
-import { useBoardStore } from "@/features/chess";
+import {
+    useBoardStore,
+} from "@/features/chess";
 
-import { movePiece } from "./move-piece";
-import { getLegalMoves } from "./legal-moves";
+import {
+    legalMoves,
+} from "./legal-moves";
 
 export function selectSquare(
+
     row: number,
+
     col: number
+
 ) {
 
     const state =
+
         useBoardStore.getState();
 
-    if (state.selected) {
+    state.select(
 
-        const legal = getLegalMoves(
+        row,
+
+        col
+
+    );
+
+    const moves =
+
+        legalMoves(
+
             state.board,
-            state.selected.row,
-            state.selected.col
-        );
 
-        const allowed = legal.some(
-
-            (square) =>
-
-                square.row === row &&
-                square.col === col
-
-        );
-
-        if (allowed) {
-
-            movePiece(
-                state.selected.row,
-                state.selected.col,
-                row,
-                col
-            );
-
-            return;
-
-        }
-
-        state.clearSelection();
-
-        return;
-
-    }
-
-    if (
-        state.board[row][col] !== "."
-    ) {
-
-        state.select(
             row,
+
             col
+
         );
 
-    }
+    return moves.filter(
+
+        (
+
+            square: {
+
+                row: number;
+
+                col: number;
+
+            }
+
+        ) =>
+
+            square.row >= 0 &&
+            square.row < 8 &&
+            square.col >= 0 &&
+            square.col < 8
+
+    );
 
 }

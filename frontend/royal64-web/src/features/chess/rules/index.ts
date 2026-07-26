@@ -8,3 +8,4 @@ export * from "./queen";
 export * from "./king";
 
 export * from "./castling";
+export * from "./en-passant";

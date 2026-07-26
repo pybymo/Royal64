@@ -1,24 +1,39 @@
-import {
-
-    resolvePiece,
-
-} from "./piece-resolver";
+import type {
+    Square,
+} from "@/features/chess/services/legal-moves";
 
 import {
-
     pawnMoves,
-
     rookMoves,
-
-    knightMoves,
-
     bishopMoves,
-
+    knightMoves,
     queenMoves,
-
     kingMoves,
-
 } from "@/features/chess/rules";
+
+type MoveGenerator = (
+
+    board: string[],
+
+    row: number,
+
+    col: number
+
+) => Square[];
+
+const generators: Record<
+    string,
+    MoveGenerator
+> = {
+
+    p: pawnMoves,
+    r: rookMoves,
+    n: knightMoves,
+    b: bishopMoves,
+    q: queenMoves,
+    k: kingMoves,
+
+};
 
 export function dispatchMoves(
 
@@ -28,78 +43,40 @@ export function dispatchMoves(
 
     col: number
 
-) {
+): Square[] {
 
     const piece =
-
         board[row][col];
 
-    switch (
-
-        resolvePiece(piece)
-
+    if (
+        piece === "."
     ) {
 
-        case "pawn":
-
-            return pawnMoves(
-
-                board,
-
-                row,
-
-                col
-
-            );
-
-        case "knight":
-
-            return knightMoves(
-
-                board,
-
-                row,
-
-                col
-
-            );
-
-        case "rook":
-
-            return rookMoves(
-                board,
-                row,
-                col
-            );
-
-        case "bishop":
-
-            return bishopMoves(
-                board,
-                row,
-                col
-            );
-
-        case "queen":
-
-            return queenMoves(
-                board,
-                row,
-                col
-            );
-
-        case "king":
-
-            return kingMoves(
-                board,
-                row,
-                col
-            );
-
-        default:
-
-            return [];
+        return [];
 
     }
+
+    const generator =
+        generators[
+            piece.toLowerCase()
+        ];
+
+    if (
+        !generator
+    ) {
+
+        return [];
+
+    }
+
+    return generator(
+
+        board,
+
+        row,
+
+        col
+
+    );
 
 }

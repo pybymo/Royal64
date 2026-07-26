@@ -1,19 +1,13 @@
 import { useBoardStore } from "@/features/chess";
 
 import {
-
     isInCheck,
-
     isCheckmate,
-
 } from "@/features/chess/engine";
 
 import {
-
     needsPromotion,
-
     usePromotionStore,
-
 } from "@/features/chess/promotion";
 
 export function movePiece(
@@ -28,17 +22,13 @@ export function movePiece(
 
 ) {
 
-    const state =
+    const state = useBoardStore.getState();
 
-        useBoardStore.getState();
+    const board = state.board.map(
 
-    const board =
+        (r) => r.split("")
 
-        state.board.map(
-
-            (r) => r.split("")
-
-        );
+    );
 
     const movingPiece =
 
@@ -50,6 +40,22 @@ export function movePiece(
 
         movingPiece.toUpperCase();
 
+    /*
+     * EN PASSANT
+     */
+
+    if (
+
+        movingPiece.toLowerCase() === "p" &&
+        fromCol !== toCol &&
+        board[toRow][toCol] === "."
+
+    ) {
+
+        board[fromRow][toCol] = ".";
+
+    }
+
     board[toRow][toCol] =
 
         movingPiece;
@@ -57,6 +63,10 @@ export function movePiece(
     board[fromRow][fromCol] =
 
         ".";
+
+    /*
+     * CASTLING
+     */
 
     if (
 
@@ -75,9 +85,7 @@ export function movePiece(
 
                 board[fromRow][7];
 
-            board[fromRow][7] =
-
-                ".";
+            board[fromRow][7] = ".";
 
         }
 
@@ -92,9 +100,7 @@ export function movePiece(
 
                 board[fromRow][0];
 
-            board[fromRow][0] =
-
-                ".";
+            board[fromRow][0] = ".";
 
         }
 
@@ -114,27 +120,47 @@ export function movePiece(
 
     );
 
+    /*
+     * LAST MOVE
+     */
+
+    state.setLastMove({
+
+        fromRow,
+
+        fromCol,
+
+        toRow,
+
+        toCol,
+
+        piece: movingPiece,
+
+    });
+
+    /*
+     * KING FLAGS
+     */
+
     if (
 
         movingPiece.toLowerCase() === "k"
 
     ) {
 
-        if (
-
-            white
-
-        ) {
+        if (white)
 
             state.whiteKingMoved = true;
 
-        } else {
+        else
 
             state.blackKingMoved = true;
 
-        }
-
     }
+
+    /*
+     * ROOK FLAGS
+     */
 
     if (
 
@@ -142,57 +168,33 @@ export function movePiece(
 
     ) {
 
-        if (
+        if (white) {
 
-            white
-
-        ) {
-
-            if (
-
-                fromCol === 0
-
-            ) {
+            if (fromCol === 0)
 
                 state.whiteLeftRookMoved = true;
 
-            }
-
-            if (
-
-                fromCol === 7
-
-            ) {
+            if (fromCol === 7)
 
                 state.whiteRightRookMoved = true;
 
-            }
-
         } else {
 
-            if (
-
-                fromCol === 0
-
-            ) {
+            if (fromCol === 0)
 
                 state.blackLeftRookMoved = true;
 
-            }
-
-            if (
-
-                fromCol === 7
-
-            ) {
+            if (fromCol === 7)
 
                 state.blackRightRookMoved = true;
-
-            }
 
         }
 
     }
+
+    /*
+     * PROMOTION
+     */
 
     if (
 
@@ -220,7 +222,13 @@ export function movePiece(
 
             );
 
+        return;
+
     }
+
+    /*
+     * CHECK
+     */
 
     if (
 
@@ -234,13 +242,13 @@ export function movePiece(
 
     ) {
 
-        console.warn(
-
-            "CHECK"
-
-        );
+        console.warn("CHECK");
 
     }
+
+    /*
+     * CHECKMATE
+     */
 
     if (
 

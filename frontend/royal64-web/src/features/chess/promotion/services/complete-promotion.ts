@@ -8,6 +8,14 @@ import {
 
 } from "@/features/chess/promotion";
 
+import {
+
+    isInCheck,
+
+    isCheckmate,
+
+} from "@/features/chess/engine";
+
 export function completePromotion(
 
     piece: PromotionPiece
@@ -44,16 +52,64 @@ export function completePromotion(
 
         : piece;
 
-    boardStore.setBoard(
+    const updatedBoard =
 
         board.map(
 
             (r) => r.join("")
 
-        )
+        );
+
+    boardStore.setBoard(
+
+        updatedBoard
 
     );
 
+    if (
+
+        isInCheck(
+
+            updatedBoard,
+
+            !promotion.white
+
+        )
+
+    ) {
+
+        console.warn(
+
+            "CHECK"
+
+        );
+
+    }
+
+    if (
+
+        isCheckmate(
+
+            updatedBoard,
+
+            !promotion.white
+
+        )
+
+    ) {
+
+        console.warn(
+
+            "CHECKMATE"
+
+        );
+
+    }
+
     promotion.hide();
+
+    boardStore.clearSelection();
+
+    boardStore.nextTurn();
 
 }

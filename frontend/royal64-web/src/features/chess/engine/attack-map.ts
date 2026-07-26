@@ -1,90 +1,100 @@
-import type { Square } from "@/features/chess/services/legal-moves";
+import type {
+
+    Square,
+
+} from "@/features/chess/services/legal-moves";
+
+import {
+
+    dispatchMoves,
+
+} from "./move-dispatcher";
 
 import {
 
     pawnAttacks,
 
-    knightMoves,
-
-    bishopMoves,
-
-    rookMoves,
-
-    queenMoves,
-
-    kingMoves,
-
 } from "@/features/chess/rules";
 
 export function buildAttackMap(
+
     board: string[]
+
 ): Square[] {
 
     const attacks: Square[] = [];
 
-    for (let row = 0; row < 8; row++) {
+    for (
 
-        for (let col = 0; col < 8; col++) {
+        let row = 0;
 
-            const piece = board[row][col];
+        row < 8;
 
-            if (piece === ".") {
+        row++
+
+    ) {
+
+        for (
+
+            let col = 0;
+
+            col < 8;
+
+            col++
+
+        ) {
+
+            const piece =
+
+                board[row][col];
+
+            if (
+
+                piece === "."
+
+            ) {
 
                 continue;
 
             }
 
-            switch (piece.toLowerCase()) {
+            if (
 
-                case "p":
+                piece.toLowerCase() === "p"
 
-                    attacks.push(
-                        ...pawnAttacks(board, row, col)
-                    );
+            ) {
 
-                    break;
+                attacks.push(
 
-                case "n":
+                    ...pawnAttacks(
 
-                    attacks.push(
-                        ...knightMoves(board, row, col)
-                    );
+                        board,
 
-                    break;
+                        row,
 
-                case "b":
+                        col
 
-                    attacks.push(
-                        ...bishopMoves(board, row, col)
-                    );
+                    )
 
-                    break;
+                );
 
-                case "r":
-
-                    attacks.push(
-                        ...rookMoves(board, row, col)
-                    );
-
-                    break;
-
-                case "q":
-
-                    attacks.push(
-                        ...queenMoves(board, row, col)
-                    );
-
-                    break;
-
-                case "k":
-
-                    attacks.push(
-                        ...kingMoves(board, row, col)
-                    );
-
-                    break;
+                continue;
 
             }
+
+            attacks.push(
+
+                ...dispatchMoves(
+
+                    board,
+
+                    row,
+
+                    col
+
+                )
+
+            );
 
         }
 

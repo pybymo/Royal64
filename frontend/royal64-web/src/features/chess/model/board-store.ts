@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import type { LastMove } from "./last-move";
+
 export interface SelectedSquare {
 
     row: number;
@@ -16,6 +18,8 @@ interface BoardStore {
 
     turn: "white" | "black";
 
+    lastMove?: LastMove;
+
     whiteKingMoved: boolean;
     blackKingMoved: boolean;
 
@@ -26,6 +30,8 @@ interface BoardStore {
     blackRightRookMoved: boolean;
 
     setBoard(board: string[]): void;
+
+    setLastMove(move: LastMove): void;
 
     select(row: number, col: number): void;
 
@@ -58,6 +64,8 @@ export const useBoardStore = create<BoardStore>((set) => ({
 
     turn: "white",
 
+    lastMove: undefined,
+
     whiteKingMoved: false,
     blackKingMoved: false,
 
@@ -72,6 +80,16 @@ export const useBoardStore = create<BoardStore>((set) => ({
         set({
 
             board,
+
+        });
+
+    },
+
+    setLastMove(move) {
+
+        set({
+
+            lastMove: move,
 
         });
 
@@ -128,6 +146,8 @@ export const useBoardStore = create<BoardStore>((set) => ({
             selected: undefined,
 
             turn: "white",
+
+            lastMove: undefined,
 
             whiteKingMoved: false,
             blackKingMoved: false,

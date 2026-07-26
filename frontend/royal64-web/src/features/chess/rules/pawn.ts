@@ -1,98 +1,159 @@
-import type { Square } from "@/features/chess/services/legal-moves";
+import type {
+    Square,
+} from "@/features/chess/services/legal-moves";
 
-function isWhite(piece: string) {
-
-    return piece === piece.toUpperCase();
-
-}
+import {
+    enPassantMoves,
+} from "./en-passant";
 
 export function pawnMoves(
+
     board: string[],
+
     row: number,
+
     col: number
+
 ): Square[] {
-
-    const piece = board[row][col];
-
-    if (piece.toLowerCase() !== "p") {
-
-        return [];
-
-    }
 
     const moves: Square[] = [];
 
-    const white = isWhite(piece);
+    const piece = board[row][col];
 
-    const direction = white ? -1 : 1;
+    const white =
+        piece === piece.toUpperCase();
 
-    const startRow = white ? 6 : 1;
+    const direction =
+        white ? -1 : 1;
 
-    const nextRow = row + direction;
+    const startRow =
+        white ? 6 : 1;
+
+    const oneStep =
+        row + direction;
 
     if (
-        nextRow >= 0 &&
-        nextRow < 8 &&
-        board[nextRow][col] === "."
+
+        oneStep >= 0 &&
+        oneStep < 8 &&
+        board[oneStep][col] === "."
+
     ) {
 
         moves.push({
-            row: nextRow,
+
+            row: oneStep,
+
             col,
+
         });
 
-        const twoRows = row + direction * 2;
+        const twoStep =
+            row + direction * 2;
 
         if (
+
             row === startRow &&
-            board[twoRows][col] === "."
+            board[twoStep][col] === "."
+
         ) {
 
             moves.push({
-                row: twoRows,
+
+                row: twoStep,
+
                 col,
+
             });
 
         }
 
     }
 
-    const captures = [-1, 1];
+    const attackOffsets = [
 
-    captures.forEach((offset) => {
+        -1,
+        1,
 
-        const r = row + direction;
-        const c = col + offset;
+    ];
 
-        if (
-            r < 0 ||
-            r > 7 ||
-            c < 0 ||
-            c > 7
-        ) {
+    attackOffsets.forEach(
 
-            return;
+        (offset) => {
+
+            const attackRow =
+                row + direction;
+
+            const attackCol =
+                col + offset;
+
+            if (
+
+                attackRow < 0 ||
+                attackRow > 7 ||
+                attackCol < 0 ||
+                attackCol > 7
+
+            ) {
+
+                return;
+
+            }
+
+            const target =
+                board[attackRow][attackCol];
+
+            if (
+
+                target === "."
+
+            ) {
+
+                return;
+
+            }
+
+            const enemy =
+
+                white
+
+                    ? target === target.toLowerCase()
+
+                    : target === target.toUpperCase();
+
+            if (
+
+                enemy
+
+            ) {
+
+                moves.push({
+
+                    row: attackRow,
+
+                    col: attackCol,
+
+                });
+
+            }
 
         }
 
-        const target = board[r][c];
+    );
 
-        if (target === ".") {
+    moves.push(
 
-            return;
+        ...enPassantMoves(
 
-        }
+            board,
 
-        if (white !== isWhite(target)) {
+            row,
 
-            moves.push({
-                row: r,
-                col: c,
-            });
+            col
 
-        }
+        )
 
-    });
+    );
 
     return moves;
 

@@ -1,11 +1,46 @@
 export type PieceType =
+
     | "pawn"
+
     | "rook"
+
     | "knight"
+
     | "bishop"
+
     | "queen"
+
     | "king"
+
     | null;
+
+const pieceMap: Record<
+
+    string,
+
+    Exclude<
+
+        PieceType,
+
+        null
+
+    >
+
+> = {
+
+    p: "pawn",
+
+    r: "rook",
+
+    n: "knight",
+
+    b: "bishop",
+
+    q: "queen",
+
+    k: "king",
+
+};
 
 export function resolvePiece(
 
@@ -13,40 +48,14 @@ export function resolvePiece(
 
 ): PieceType {
 
-    switch (
+    return (
 
-        piece.toLowerCase()
+        pieceMap[
 
-    ) {
+            piece.toLowerCase()
 
-        case "p":
+        ] ?? null
 
-            return "pawn";
-
-        case "r":
-
-            return "rook";
-
-        case "n":
-
-            return "knight";
-
-        case "b":
-
-            return "bishop";
-
-        case "q":
-
-            return "queen";
-
-        case "k":
-
-            return "king";
-
-        default:
-
-            return null;
-
-    }
+    );
 
 }

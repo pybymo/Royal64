@@ -1,6 +1,5 @@
 import {
     dispatchMoves,
-    filterLegalMoves,
 } from "@/features/chess/engine";
 
 export interface Square {
@@ -11,23 +10,24 @@ export interface Square {
 
 }
 
-export function getLegalMoves(
+export function legalMoves(
+
     board: string[],
+
     row: number,
+
     col: number
+
 ): Square[] {
 
-    const moves = dispatchMoves(
-        board,
-        row,
-        col
-    );
+    return dispatchMoves(
 
-    return filterLegalMoves(
         board,
+
         row,
-        col,
-        moves
+
+        col
+
     );
 
 }
