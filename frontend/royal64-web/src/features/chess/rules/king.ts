@@ -1,82 +1,95 @@
-import type { Square } from "@/features/chess/services/legal-moves";
+import type {
 
-function isWhite(piece: string) {
+    Square,
 
-    return piece === piece.toUpperCase();
+} from "@/features/chess/services/legal-moves";
 
-}
+import {
+
+    castlingMoves,
+
+} from "./castling";
 
 export function kingMoves(
+
     board: string[],
+
     row: number,
+
     col: number
+
 ): Square[] {
-
-    const piece = board[row][col];
-
-    if (piece.toLowerCase() !== "k") {
-
-        return [];
-
-    }
-
-    const white = isWhite(piece);
 
     const moves: Square[] = [];
 
-    const offsets = [
+    for (
 
-        [-1, -1],
-        [-1, 0],
-        [-1, 1],
+        let dr = -1;
 
-        [0, -1],
-        [0, 1],
+        dr <= 1;
 
-        [1, -1],
-        [1, 0],
-        [1, 1],
+        dr++
 
-    ];
+    ) {
 
-    offsets.forEach(([dr, dc]) => {
+        for (
 
-        const r = row + dr;
-        const c = col + dc;
+            let dc = -1;
 
-        if (
+            dc <= 1;
 
-            r < 0 ||
-            r > 7 ||
-            c < 0 ||
-            c > 7
+            dc++
 
         ) {
 
-            return;
+            if (
+
+                dr === 0 &&
+                dc === 0
+
+            )
+
+                continue;
+
+            const r = row + dr;
+            const c = col + dc;
+
+            if (
+
+                r >= 0 &&
+                r < 8 &&
+                c >= 0 &&
+                c < 8
+
+            ) {
+
+                moves.push({
+
+                    row: r,
+
+                    col: c,
+
+                });
+
+            }
 
         }
 
-        const target = board[r][c];
+    }
 
-        if (
+    moves.push(
 
-            target === "." ||
-            isWhite(target) !== white
+        ...castlingMoves(
 
-        ) {
+            board,
 
-            moves.push({
+            row,
 
-                row: r,
+            col
 
-                col: c,
+        )
 
-            });
-
-        }
-
-    });
+    );
 
     return moves;
 

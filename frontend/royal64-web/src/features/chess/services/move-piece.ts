@@ -8,6 +8,14 @@ import {
 
 } from "@/features/chess/engine";
 
+import {
+
+    needsPromotion,
+
+    usePromotionStore,
+
+} from "@/features/chess/promotion";
+
 export function movePiece(
 
     fromRow: number,
@@ -36,10 +44,61 @@ export function movePiece(
 
         board[fromRow][fromCol];
 
+    const white =
+
+        movingPiece ===
+
+        movingPiece.toUpperCase();
+
     board[toRow][toCol] =
+
         movingPiece;
 
-    board[fromRow][fromCol] = ".";
+    board[fromRow][fromCol] =
+
+        ".";
+
+    if (
+
+        movingPiece.toLowerCase() === "k"
+
+    ) {
+
+        if (
+
+            fromCol === 4 &&
+            toCol === 6
+
+        ) {
+
+            board[fromRow][5] =
+
+                board[fromRow][7];
+
+            board[fromRow][7] =
+
+                ".";
+
+        }
+
+        if (
+
+            fromCol === 4 &&
+            toCol === 2
+
+        ) {
+
+            board[fromRow][3] =
+
+                board[fromRow][0];
+
+            board[fromRow][0] =
+
+                ".";
+
+        }
+
+    }
 
     const updatedBoard =
 
@@ -55,11 +114,113 @@ export function movePiece(
 
     );
 
-    const movingWhite =
+    if (
 
-        movingPiece ===
+        movingPiece.toLowerCase() === "k"
 
-        movingPiece.toUpperCase();
+    ) {
+
+        if (
+
+            white
+
+        ) {
+
+            state.whiteKingMoved = true;
+
+        } else {
+
+            state.blackKingMoved = true;
+
+        }
+
+    }
+
+    if (
+
+        movingPiece.toLowerCase() === "r"
+
+    ) {
+
+        if (
+
+            white
+
+        ) {
+
+            if (
+
+                fromCol === 0
+
+            ) {
+
+                state.whiteLeftRookMoved = true;
+
+            }
+
+            if (
+
+                fromCol === 7
+
+            ) {
+
+                state.whiteRightRookMoved = true;
+
+            }
+
+        } else {
+
+            if (
+
+                fromCol === 0
+
+            ) {
+
+                state.blackLeftRookMoved = true;
+
+            }
+
+            if (
+
+                fromCol === 7
+
+            ) {
+
+                state.blackRightRookMoved = true;
+
+            }
+
+        }
+
+    }
+
+    if (
+
+        needsPromotion(
+
+            movingPiece,
+
+            toRow
+
+        )
+
+    ) {
+
+        usePromotionStore
+
+            .getState()
+
+            .show(
+
+                toRow,
+
+                toCol,
+
+                white
+
+            );
+
+    }
 
     if (
 
@@ -67,7 +228,7 @@ export function movePiece(
 
             updatedBoard,
 
-            !movingWhite
+            !white
 
         )
 
@@ -87,7 +248,7 @@ export function movePiece(
 
             updatedBoard,
 
-            !movingWhite
+            !white
 
         )
 

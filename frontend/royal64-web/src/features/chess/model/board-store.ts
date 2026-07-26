@@ -1,8 +1,6 @@
 import { create } from "zustand";
 
-import { initialBoard } from "./initial-position";
-
-interface SelectedSquare {
+export interface SelectedSquare {
 
     row: number;
 
@@ -18,35 +16,62 @@ interface BoardStore {
 
     turn: "white" | "black";
 
-    reset(): void;
+    whiteKingMoved: boolean;
+    blackKingMoved: boolean;
+
+    whiteLeftRookMoved: boolean;
+    whiteRightRookMoved: boolean;
+
+    blackLeftRookMoved: boolean;
+    blackRightRookMoved: boolean;
+
+    setBoard(board: string[]): void;
 
     select(row: number, col: number): void;
 
     clearSelection(): void;
 
-    setBoard(board: string[]): void;
-
     nextTurn(): void;
+
+    reset(): void;
 
 }
 
+const INITIAL_BOARD = [
+
+    "rnbqkbnr",
+    "pppppppp",
+    "........",
+    "........",
+    "........",
+    "........",
+    "PPPPPPPP",
+    "RNBQKBNR",
+
+];
+
 export const useBoardStore = create<BoardStore>((set) => ({
 
-    board: initialBoard,
+    board: INITIAL_BOARD,
 
     selected: undefined,
 
     turn: "white",
 
-    reset() {
+    whiteKingMoved: false,
+    blackKingMoved: false,
+
+    whiteLeftRookMoved: false,
+    whiteRightRookMoved: false,
+
+    blackLeftRookMoved: false,
+    blackRightRookMoved: false,
+
+    setBoard(board) {
 
         set({
 
-            board: initialBoard,
-
-            selected: undefined,
-
-            turn: "white",
+            board,
 
         });
 
@@ -78,16 +103,6 @@ export const useBoardStore = create<BoardStore>((set) => ({
 
     },
 
-    setBoard(board) {
-
-        set({
-
-            board,
-
-        });
-
-    },
-
     nextTurn() {
 
         set((state) => ({
@@ -101,6 +116,29 @@ export const useBoardStore = create<BoardStore>((set) => ({
                     : "white",
 
         }));
+
+    },
+
+    reset() {
+
+        set({
+
+            board: INITIAL_BOARD,
+
+            selected: undefined,
+
+            turn: "white",
+
+            whiteKingMoved: false,
+            blackKingMoved: false,
+
+            whiteLeftRookMoved: false,
+            whiteRightRookMoved: false,
+
+            blackLeftRookMoved: false,
+            blackRightRookMoved: false,
+
+        });
 
     },
 
