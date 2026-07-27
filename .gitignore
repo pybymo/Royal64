@@ -77,6 +77,13 @@ Thumbs.db
 .pyright/
 
 ########################
+# Stockfish binaries
+########################
+
+backend/chess/stockfish/*.exe
+backend/chess/stockfish/*
+
+########################
 # Temp
 ########################
 
