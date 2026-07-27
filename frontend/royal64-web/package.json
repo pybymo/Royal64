@@ -12,6 +12,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.3",
     "axios": "^1.18.1",
+    "chess.js": "^1.4.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
     "react": "^19.2.7",
