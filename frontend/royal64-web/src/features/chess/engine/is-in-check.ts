@@ -1,17 +1,12 @@
 import { buildAttackMap } from "./attack-map";
 
 function isWhite(piece: string) {
-
     return piece === piece.toUpperCase();
-
 }
 
 export function isInCheck(
-
     board: string[],
-
     white: boolean
-
 ): boolean {
 
     let kingRow = -1;
@@ -23,51 +18,34 @@ export function isInCheck(
 
             const piece = board[r][c];
 
-            if (piece === ".") {
-
+            if (piece === ".")
                 continue;
 
-            }
-
             if (
-
                 piece.toLowerCase() === "k" &&
-
                 isWhite(piece) === white
-
             ) {
-
                 kingRow = r;
                 kingCol = c;
-
             }
-
         }
-
     }
 
-    if (
 
-        kingRow === -1
-
-    ) {
-
+    if (kingRow === -1)
         return false;
 
-    }
 
     const attacks =
+        buildAttackMap(
+            board,
+            !white
+        );
 
-        buildAttackMap(board);
 
     return attacks.some(
-
-        (square) =>
-
+        square =>
             square.row === kingRow &&
-
             square.col === kingCol
-
     );
-
 }

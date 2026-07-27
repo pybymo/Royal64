@@ -1,85 +1,108 @@
 export function simulateMove(
-
     board: string[],
-
     fromRow: number,
-
     fromCol: number,
-
     toRow: number,
-
     toCol: number
-
 ): string[] {
 
     const clone = board.map(
-
-        (row) => row.split("")
-
+        row => row.split("")
     );
 
-    const piece =
 
+    const piece =
         clone[fromRow][fromCol];
+
+
+    if (!piece || piece === ".") {
+        return board;
+    }
+
 
     /*
      * EN PASSANT
      */
 
     if (
-
         piece.toLowerCase() === "p" &&
         fromCol !== toCol &&
         clone[toRow][toCol] === "."
-
     ) {
 
         clone[fromRow][toCol] = ".";
 
     }
 
+
     /*
-     * NORMAL MOVE
+     * MOVE PIECE
      */
 
-    clone[toRow][toCol] = piece;
+    let movedPiece = piece;
+
+
+    /*
+     * PROMOTION
+     */
+
+    if (
+        piece === "P" &&
+        toRow === 0
+    ) {
+
+        movedPiece = "Q";
+
+    }
+
+
+    if (
+        piece === "p" &&
+        toRow === 7
+    ) {
+
+        movedPiece = "q";
+
+    }
+
+
+    clone[toRow][toCol] = movedPiece;
 
     clone[fromRow][fromCol] = ".";
+
+
 
     /*
      * CASTLING
      */
 
     if (
-
-        piece.toLowerCase() === "k"
-
+        piece.toLowerCase() === "k" &&
+        Math.abs(toCol - fromCol) === 2
     ) {
 
+
+        // King side
+
         if (
-
-            fromCol === 4 &&
             toCol === 6
-
         ) {
 
             clone[fromRow][5] =
-
                 clone[fromRow][7];
 
             clone[fromRow][7] = ".";
 
         }
 
+
+        // Queen side
+
         if (
-
-            fromCol === 4 &&
             toCol === 2
-
         ) {
 
             clone[fromRow][3] =
-
                 clone[fromRow][0];
 
             clone[fromRow][0] = ".";
@@ -88,10 +111,10 @@ export function simulateMove(
 
     }
 
+
+
     return clone.map(
-
-        (row) => row.join("")
-
+        row => row.join("")
     );
 
 }

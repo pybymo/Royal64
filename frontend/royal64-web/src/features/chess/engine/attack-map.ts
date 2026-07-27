@@ -7,8 +7,8 @@ import {
 } from "@/features/chess/rules";
 
 import {
-    dispatchMoves,
-} from "./move-dispatcher";
+    attackMoves,
+} from "./attack-dispatcher";
 
 
 function kingAttacks(
@@ -18,59 +18,80 @@ function kingAttacks(
 
     const attacks: Square[] = [];
 
-    for (const [dr, dc] of [
-        [-1,-1],
-        [-1,0],
-        [-1,1],
-        [0,-1],
-        [0,1],
-        [1,-1],
-        [1,0],
-        [1,1],
-    ]) {
+    const directions = [
+        [-1, -1],
+        [-1, 0],
+        [-1, 1],
+        [0, -1],
+        [0, 1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+    ];
+
+
+    for (const [dr, dc] of directions) {
 
         const r = row + dr;
         const c = col + dc;
 
+
         if (
-            r >=0 &&
-            r <8 &&
-            c >=0 &&
-            c <8
+            r >= 0 &&
+            r < 8 &&
+            c >= 0 &&
+            c < 8
         ) {
 
             attacks.push({
-                row:r,
-                col:c,
+                row: r,
+                col: c,
             });
 
         }
+
     }
 
+
     return attacks;
+
 }
 
 
+
 export function buildAttackMap(
-    board:string[],
-    attackerWhite:boolean
-):Square[] {
+    board: string[],
+    attackerWhite?: boolean
+): Square[] {
 
 
-    const attacks:Square[]=[];
+    const attacks: Square[] = [];
 
 
-    for(let row=0; row<8; row++){
+    for (
+        let row = 0;
+        row < 8;
+        row++
+    ) {
 
-        for(let col=0; col<8; col++){
+        for (
+            let col = 0;
+            col < 8;
+            col++
+        ) {
 
 
             const piece =
                 board[row][col];
 
 
-            if(piece === ".")
+            if (
+                piece === "."
+            ) {
+
                 continue;
+
+            }
 
 
 
@@ -79,10 +100,19 @@ export function buildAttackMap(
 
 
 
-            if(
+            /*
+             * اگر رنگ مشخص شده،
+             * فقط همان طرف را بررسی کن
+             */
+
+            if (
+                attackerWhite !== undefined &&
                 white !== attackerWhite
-            )
+            ) {
+
                 continue;
+
+            }
 
 
 
@@ -91,44 +121,47 @@ export function buildAttackMap(
 
 
 
-            if(type==="p"){
+            switch(type) {
 
-                attacks.push(
-                    ...pawnAttacks(
-                        board,
-                        row,
-                        col
-                    )
-                );
 
-                continue;
+                case "p":
+
+                    attacks.push(
+                        ...pawnAttacks(
+                            board,
+                            row,
+                            col
+                        )
+                    );
+
+                    break;
+
+
+
+                case "k":
+
+                    attacks.push(
+                        ...kingAttacks(
+                            row,
+                            col
+                        )
+                    );
+
+                    break;
+
+
+
+                default:
+
+                    attacks.push(
+                        ...attackMoves(
+                            board,
+                            row,
+                            col
+                        )
+                    );
 
             }
-
-
-
-            if(type==="k"){
-
-                attacks.push(
-                    ...kingAttacks(
-                        row,
-                        col
-                    )
-                );
-
-                continue;
-
-            }
-
-
-
-            attacks.push(
-                ...dispatchMoves(
-                    board,
-                    row,
-                    col
-                )
-            );
 
         }
 

@@ -3,105 +3,76 @@ import { filterLegalMoves } from "./legal-move-filter";
 import { isInCheck } from "./is-in-check";
 
 function isWhite(piece: string) {
-
     return piece === piece.toUpperCase();
-
 }
 
+
 export function isCheckmate(
-
     board: string[],
-
     white: boolean
-
 ): boolean {
 
+
+    // اگر شاه کیش نیست، مات نیست
     if (
-
         !isInCheck(
-
             board,
-
             white
-
         )
-
     ) {
-
         return false;
-
     }
 
+
     for (
-
         let row = 0;
-
         row < 8;
-
         row++
-
     ) {
 
         for (
-
             let col = 0;
-
             col < 8;
-
             col++
-
         ) {
 
-            const piece =
 
+            const piece =
                 board[row][col];
 
-            if (
 
+            if (
                 piece === "."
-
             )
-
                 continue;
 
-            if (
 
+            if (
                 isWhite(piece) !== white
-
             )
-
                 continue;
 
-            const moves =
 
+
+            const pseudoMoves =
                 dispatchMoves(
-
                     board,
-
                     row,
-
                     col
-
                 );
 
-            const legal =
 
+            const legalMoves =
                 filterLegalMoves(
-
                     board,
-
                     row,
-
                     col,
-
-                    moves
-
+                    pseudoMoves
                 );
+
 
             if (
-
-                legal.length > 0
-
+                legalMoves.length > 0
             ) {
 
                 return false;
@@ -111,6 +82,7 @@ export function isCheckmate(
         }
 
     }
+
 
     return true;
 
