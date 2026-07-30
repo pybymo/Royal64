@@ -1,13 +1,29 @@
 export interface User {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName?: string;
-    rating: number;
+
+    id: string;
+
+    username: string | null;
+
+    firstName: string | null;
+
+    lastName: string | null;
+
+    trustScore: number;
+
+    wins: number;
+
+    losses: number;
+
+    draws: number;
 }
 
 export interface AuthState {
+
     isAuthenticated: boolean;
+
     loading: boolean;
+
+    error: string | null;
+
     user: User | null;
 }

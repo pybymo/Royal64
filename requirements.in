@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+aiogram
+sqlalchemy
+alembic
+asyncpg
+psycopg[binary]
+redis
+pydantic
+pydantic-settings
+python-dotenv
+loguru
+python-chess
+httpx
+pynacl
+pyjwt

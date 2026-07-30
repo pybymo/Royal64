@@ -7,6 +7,8 @@ from aiogram.types import Message
 
 from database.session import SessionLocal
 
+from core.exceptions import EscrowError, PlayerWalletNotVerifiedError
+
 from repositories.offer_repository import OfferRepository
 from repositories.user_repository import UserRepository
 
@@ -158,10 +160,31 @@ async def accept_offer(callback: CallbackQuery):
 
         service = OfferService(session)
 
-        match = await service.accept(
-            offer,
-            accepter,
-        )
+        try:
+            match = await service.accept(
+                offer,
+                accepter,
+            )
+
+        except PlayerWalletNotVerifiedError:
+
+            await callback.message.answer(
+                "⚠️ Connect and verify a TON wallet before accepting a paid match."
+            )
+
+            await callback.answer()
+
+            return
+
+        except EscrowError:
+
+            await callback.message.answer(
+                "⚠️ Could not set up escrow for this match right now. Please try again shortly."
+            )
+
+            await callback.answer()
+
+            return
 
     await callback.message.answer(
         f"""
@@ -171,13 +194,13 @@ ID
 
 {match.id}
 
-Type
+Games
 
-{match.match_type}
+{match.games_required}
 
 Stake
 
-{match.stake} TON
+{match.amount} TON
 
 Game #1 Ready
 """

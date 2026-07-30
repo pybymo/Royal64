@@ -1,27 +1,11 @@
-import { Button, Card, Stack, Text } from "@/shared/ui";
+import { Card, Stack, Text } from "@/shared/ui";
 
-import { loginAsGuest } from "@/features/auth/auth-service";
 import { useAuthStore } from "@/features/auth/auth-store";
 
 export function LoginPage() {
 
-    const login = useAuthStore((s) => s.login);
-
-    async function handleGuestLogin() {
-
-        const user = await loginAsGuest();
-
-        login(user);
-
-    }
-
-    function handleTelegramLogin() {
-
-        // TODO
-        // Telegram OAuth
-        console.log("Telegram Login");
-
-    }
+    const loading = useAuthStore((s) => s.loading);
+    const error = useAuthStore((s) => s.error);
 
     return (
 
@@ -30,27 +14,20 @@ export function LoginPage() {
             <Stack gap={20}>
 
                 <Text>
-
-                    Royal64 Login
-
+                    Royal64
                 </Text>
 
-                <Button
-                    onClick={handleGuestLogin}
-                >
+                {loading && (
+                    <Text variant="small">
+                        Signing you in...
+                    </Text>
+                )}
 
-                    Login as Guest
-
-                </Button>
-
-                <Button
-                    variant="secondary"
-                    onClick={handleTelegramLogin}
-                >
-
-                    Telegram Login
-
-                </Button>
+                {error && (
+                    <Text variant="small">
+                        {error}
+                    </Text>
+                )}
 
             </Stack>
 

@@ -18,3 +18,14 @@ class OfferStatus(str, Enum):
     ACCEPTED = "ACCEPTED"
     CANCELLED = "CANCELLED"
     EXPIRED = "EXPIRED"
+
+
+class EscrowStatus(str, Enum):
+    """Mirrors the on-chain contract's Match.status — this is our
+    off-chain cache/audit trail of that state, never the source of
+    truth for who gets paid."""
+
+    WAITING = "WAITING"
+    ACTIVE = "ACTIVE"
+    RESOLVED = "RESOLVED"
+    CANCELLED = "CANCELLED"

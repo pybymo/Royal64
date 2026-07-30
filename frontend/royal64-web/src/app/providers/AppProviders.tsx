@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/features/auth/AuthProvider";
+import { TonConnectProvider } from "./TonConnectProvider";
 
 
 const queryClient = new QueryClient();
@@ -11,9 +12,13 @@ export function AppProviders({ children }: PropsWithChildren) {
 
         <QueryClientProvider client={queryClient}>
 
-            <AuthProvider />
+            <TonConnectProvider>
 
-            {children}
+                <AuthProvider />
+
+                {children}
+
+            </TonConnectProvider>
 
         </QueryClientProvider>
 

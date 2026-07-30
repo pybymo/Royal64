@@ -28,9 +28,9 @@ class GameService:
 
             game_number=1,
 
-            white_player_id=match.owner_id,
+            white_player_id=match.white_player_id,
 
-            black_player_id=match.accepter_id,
+            black_player_id=match.black_player_id,
 
             status="WAITING",
 

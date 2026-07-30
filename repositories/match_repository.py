@@ -34,3 +34,13 @@ class MatchRepository:
         result = await self.session.execute(stmt)
 
         return result.scalar_one_or_none()
+
+    async def save(
+        self,
+        match: Match,
+    ):
+
+        await self.session.commit()
+        await self.session.refresh(match)
+
+        return match
