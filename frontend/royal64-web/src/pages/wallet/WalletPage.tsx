@@ -1,4 +1,4 @@
-import { Card, Stack, Text, Button } from "@/shared/ui";
+import { Badge, Card, Stack, Text, Button } from "@/shared/ui";
 
 import { useWallet } from "@/features/wallet/use-wallet";
 
@@ -12,31 +12,32 @@ export function WalletPage() {
 
             <Stack gap={20}>
 
-                <Text>
+                <Text variant="h2">
                     Wallet
                 </Text>
 
-                <Text>
-                    {wallet.balance} TON
+                <Text variant="h1" mono>
+                    {wallet.balance.toFixed(2)} TON
                 </Text>
 
-                <Text>
-                    Locked :
-                    {" "}
-                    {wallet.locked}
+                <Text variant="small" mono>
+                    Locked in escrow: {wallet.locked.toFixed(2)} TON
                 </Text>
 
                 {wallet.address ? (
 
-                    <Stack gap={8}>
+                    <Stack gap={10}>
 
-                        <Text variant="small">
-                            {wallet.isVerified ? "Verified" : "Pending"}
-                            {" · "}
+                        <Badge
+                            text={wallet.isVerified ? "Verified" : "Pending"}
+                            variant={wallet.isVerified ? "success" : "warning"}
+                        />
+
+                        <Text variant="small" mono>
                             {wallet.address}
                         </Text>
 
-                        <Button onClick={disconnect}>
+                        <Button variant="secondary" onClick={disconnect}>
                             Disconnect
                         </Button>
 
@@ -51,9 +52,11 @@ export function WalletPage() {
                 )}
 
                 {error && (
-                    <Text variant="small">
-                        {error}
-                    </Text>
+                    <Card>
+                        <Text variant="small">
+                            {error}
+                        </Text>
+                    </Card>
                 )}
 
             </Stack>

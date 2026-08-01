@@ -1,18 +1,10 @@
-// Re-exports the class Tact generates when you build the contract in
-// ../../../contracts/escrow. The exact path/name depends on your
-// Tact/Blueprint version — after running `tact build` there, look in
-// contracts/escrow/output/ and fix this import accordingly.
+// Re-exports the class Tact generates when you build the contract.
+// This file itself never encodes a message — the generated class is
+// what knows how to correctly turn CreateMatch / Deposit /
+// DeclareResult / CancelExpired / ForceSplit into the right cells.
 //
-// The generated class is what actually knows how to encode
-// CreateMatch / Deposit / DeclareResult / CancelExpired / ForceSplit
-// into correctly-typed cells — nothing in this service should
-// hand-construct those cells itself.
+// Requires: copy build/Royal64Escrow/tact_Royal64Escrow.ts from your
+// Blueprint project into ./generated/Royal64Escrow.ts first — see
+// ./generated/README.md.
 
-// TODO: fix this path after `tact build`
-// export { Royal64Escrow } from "../../../contracts/escrow/output/Royal64Escrow_Royal64Escrow";
-
-throw new Error(
-    "contract.ts is a placeholder — build the contract with `tact build` " +
-    "in contracts/escrow, then point this import at the generated wrapper " +
-    "before running chain-writer."
-);
+export { Royal64Escrow } from "./generated/Royal64Escrow";

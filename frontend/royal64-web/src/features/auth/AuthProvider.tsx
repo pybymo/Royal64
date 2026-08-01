@@ -18,6 +18,18 @@ export function AuthProvider() {
 
             setLoading(true);
 
+            const webApp = (window as any).Telegram?.WebApp;
+
+            // Telegram shows its own loading UI over the Mini App until
+            // ready() is called — skipping this is a real reason a
+            // Mini App can sit on a spinner far longer than the page
+            // itself actually takes to load. expand() just requests
+            // full height instead of the collapsed default.
+            if (webApp) {
+                webApp.ready();
+                webApp.expand();
+            }
+
             const initData = getTelegramInitData();
 
             if (!initData) {

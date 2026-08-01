@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.enums import OfferStatus
 from database.models.match_offer import MatchOffer
 
 
@@ -26,6 +27,18 @@ class OfferRepository:
         result = await self.session.execute(stmt)
 
         return result.scalar_one_or_none()
+
+    async def list_open(self):
+
+        stmt = (
+            select(MatchOffer)
+            .where(MatchOffer.status == OfferStatus.OPEN)
+            .order_by(MatchOffer.created_at.desc())
+        )
+
+        result = await self.session.execute(stmt)
+
+        return list(result.scalars().all())
 
     async def save(
         self,

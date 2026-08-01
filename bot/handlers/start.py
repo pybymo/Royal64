@@ -1,9 +1,15 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    WebAppInfo,
+)
 
 from bot.keyboards.main_menu import main_menu
 from bot.texts import en
+from core.config import settings
 from database.session import SessionLocal
 from schemas.user import UserCreate
 from services.user_service import UserService
@@ -28,7 +34,27 @@ async def start_handler(message: Message):
             )
         )
 
+    webapp_keyboard = None
+
+    if settings.WEBAPP_URL:
+
+        webapp_keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🚀 Open Royal64",
+                        web_app=WebAppInfo(url=settings.WEBAPP_URL),
+                    )
+                ]
+            ]
+        )
+
     await message.answer(
         en.WELCOME,
+        reply_markup=webapp_keyboard,
+    )
+
+    await message.answer(
+        "Menu:",
         reply_markup=main_menu(),
     )

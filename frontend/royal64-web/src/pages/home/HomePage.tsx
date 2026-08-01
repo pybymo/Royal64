@@ -10,19 +10,19 @@ export function HomePage() {
 
             <Stack gap={20}>
 
-                <Text>
+                <Text variant="h1">
 
                     Royal64
 
                 </Text>
 
-                <Text>
+                <Text variant="small">
 
                     Professional Chess Platform
 
                 </Text>
 
-                <Link to="/login">
+                <Link to="/lobby">
 
                     <Button>
 

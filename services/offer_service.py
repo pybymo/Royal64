@@ -1,5 +1,8 @@
+from uuid import uuid4
+
 from core.exceptions import EscrowError, PlayerWalletNotVerifiedError
 from database.models.match import MatchStatus
+from database.models.match_offer import MatchOffer
 from services.match_service import MatchService
 from services.game_service import GameService
 from services.payment import PaymentService
@@ -31,6 +34,35 @@ class OfferService:
         self.user_repo = UserRepository(session)
 
         self.wallet_repo = WalletRepository(session)
+
+    async def create(self, owner, data):
+        """
+        Same wallet requirement as accepting: an offer can't be created
+        by someone with nowhere for their winnings to go either.
+        """
+
+        wallet = await self.wallet_repo.get_default_for_user(owner.id)
+
+        if wallet is None or not wallet.is_verified:
+            raise PlayerWalletNotVerifiedError(
+                "connect and verify a wallet before creating a paid offer"
+            )
+
+        offer = MatchOffer(
+            id=uuid4(),
+            owner_id=owner.id,
+            wallet_id=wallet.id,
+            stake=data.stake,
+            match_type=data.match_type,
+            time_control=data.time_control,
+            note=data.note,
+        )
+
+        return await self.repo.save(offer)
+
+    async def list_open(self):
+
+        return await self.repo.list_open()
 
     async def accept(
         self,

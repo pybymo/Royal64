@@ -1,0 +1,55 @@
+.r64-theme-picker{
+
+    display:flex;
+
+    gap:10px;
+
+}
+
+.r64-theme-swatch{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:6px;
+
+    background:var(--surface);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-md);
+
+    padding:8px;
+
+    transition:border-color .15s ease;
+
+}
+
+.r64-theme-swatch.active{
+
+    border-color:var(--primary);
+
+}
+
+.r64-theme-swatch-preview{
+
+    width:36px;
+
+    height:36px;
+
+    border-radius:var(--radius-sm);
+
+    display:block;
+
+}
+
+.r64-theme-swatch-label{
+
+    font-size:12px;
+
+    color:var(--text-secondary);
+
+}

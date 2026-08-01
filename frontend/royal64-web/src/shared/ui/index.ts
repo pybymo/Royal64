@@ -5,3 +5,5 @@ export * from "./badge";
 export * from "./container";
 export * from "./stack";
 export * from "./text";
+export * from "./boardthemepicker";
+export * from "./promotionpicker";

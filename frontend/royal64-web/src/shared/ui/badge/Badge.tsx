@@ -1,33 +1,18 @@
+import "./Badge.scss";
+import clsx from "clsx";
+
+type Variant = "default" | "success" | "warning" | "danger" | "muted";
+
 type Props = {
+    text: string;
+    variant?: Variant;
+};
 
-    text:string
+export function Badge({ text, variant = "default" }: Props) {
 
-}
-
-export function Badge({text}:Props){
-
-    return(
-
-        <span
-            style={{
-
-                padding:"4px 10px",
-
-                borderRadius:999,
-
-                background:"var(--primary)",
-
-                color:"white",
-
-                fontSize:12
-
-            }}
-        >
-
+    return (
+        <span className={clsx("r64-badge", variant)}>
             {text}
-
         </span>
-
-    )
-
+    );
 }

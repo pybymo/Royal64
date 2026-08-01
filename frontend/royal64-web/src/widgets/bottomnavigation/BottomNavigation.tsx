@@ -1,21 +1,34 @@
+import { NavLink } from "react-router-dom";
+
 import "./BottomNavigation.scss";
 
-export function BottomNavigation(){
+const ITEMS = [
+    { to: "/dashboard", icon: "🏠", label: "Home" },
+    { to: "/lobby", icon: "♟️", label: "Play" },
+    { to: "/wallet", icon: "💰", label: "Wallet" },
+    { to: "/profile", icon: "👤", label: "Profile" },
+];
 
-    return(
+export function BottomNavigation() {
+
+    return (
 
         <nav className="bottom-nav">
 
-            <button>🏠</button>
+            {ITEMS.map((item) => (
 
-            <button>♟️</button>
-
-            <button>💰</button>
-
-            <button>👤</button>
+                <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                        isActive ? "active" : undefined
+                    }
+                >
+                    {item.icon}
+                </NavLink>
+            ))}
 
         </nav>
 
-    )
-
+    );
 }

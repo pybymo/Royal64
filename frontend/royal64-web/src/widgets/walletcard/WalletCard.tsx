@@ -26,7 +26,7 @@ export function WalletCard({
 
                 </Text>
 
-                <Text variant="h1">
+                <Text variant="h1" mono>
 
                     {balance.toFixed(2)} TON
 

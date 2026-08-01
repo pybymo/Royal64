@@ -4,13 +4,33 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    # extra="ignore": an unrecognized key in .env should never crash
+    # the whole app at startup — this exact class of failure (a field
+    # got renamed/removed in code but .env still has the old key, or
+    # vice versa) is easy to hit and shouldn't be fatal.
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     BOT_TOKEN: str = ""
     DATABASE_URL: str = ""
     REDIS_URL: str = ""
 
     ENV: str = "development"
+
+    # --- Mini App ---
+    # The frontend's public URL. Telegram will only populate
+    # Telegram.WebApp.initData when the page is opened THROUGH this
+    # mechanism (chat menu button / web_app keyboard button) — opening
+    # the same URL in a normal browser tab will always show empty
+    # initData, which is expected, not a bug.
+    WEBAPP_URL: str = ""
+
+    # Comma-separated list of origins allowed to call this API from a
+    # browser (CORS). The frontend dev server and its origin differ
+    # from the backend's (different port, or a whole different ngrok
+    # domain when testing from a phone) — without this, every request
+    # from the browser gets silently blocked by CORS, not by anything
+    # this app's own logic rejected.
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     # --- Auth / session ---
     # Session tokens issued after a wallet is verified. Generate with:
@@ -48,6 +68,28 @@ class Settings(BaseSettings):
     ESCROW_FEE_BPS: int = 300  # must match FEE_BPS in escrow.tact
     ESCROW_DEPOSIT_WINDOW_SECONDS: int = 15 * 60
     ESCROW_RESOLVE_WINDOW_SECONDS: int = 6 * 60 * 60
+
+    # --- Anti-cheat ---
+    STOCKFISH_PATH: str = ""  # override auto-detection if needed
+    ANTICHEAT_ENGINE_DEPTH: int = 16
+
+    # Below this many calibration games, a player has no reliable
+    # fingerprint yet — analysis still runs but nothing gets flagged
+    # off a sample too small to mean anything.
+    ANTICHEAT_MIN_GAMES_FOR_BASELINE: int = 3
+
+    # A single game's average centipawn loss below this is suspicious
+    # on its own regardless of history (near-engine-perfect play).
+    ANTICHEAT_ACPL_HARD_FLAG_THRESHOLD: int = 15
+
+    # How many standard deviations a game's ACPL must sit below a
+    # player's own established baseline to be flagged as a deviation
+    # (as opposed to them just being a strong player generally).
+    ANTICHEAT_ACPL_DEVIATION_SIGMA: float = 2.5
+
+    # Move-timing consistency: real humans vary; a suspiciously low
+    # coefficient of variation in per-move time suggests automation.
+    ANTICHEAT_TIMING_CV_FLAG_THRESHOLD: float = 0.12
 
 
 @lru_cache

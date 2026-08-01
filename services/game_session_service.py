@@ -130,3 +130,12 @@ class GameSessionService:
     ):
 
         self.sessions[game_id].finished = True
+
+
+# Module-level singleton — in-memory game state needs to be shared
+# across every websocket connection handling a given game within this
+# process. This does NOT survive a restart and does NOT work across
+# multiple app workers/instances — a Redis-backed session store is the
+# natural next step once this needs to run on more than one process
+# (same scaling conversation as the "1M users" architecture question).
+game_sessions = GameSessionService()

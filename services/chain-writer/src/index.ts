@@ -1,10 +1,11 @@
 import express from "express";
-import { Address } from "@ton/core";
+import { Address, toNano } from "@ton/core";
+import { TonClient } from "@ton/ton";
 import { z } from "zod";
 
 import { env } from "./env.js";
 import { getOracleWallet } from "./wallet.js";
-// import { Royal64Escrow } from "./contract.js"; // uncomment once built
+import { Royal64Escrow } from "./contract.js";
 
 const app = express();
 app.use(express.json());
@@ -18,6 +19,12 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+function openEscrow(client: TonClient) {
+    return client.open(
+        Royal64Escrow.fromAddress(Address.parse(env.escrowAddress))
+    );
+}
 
 const createMatchSchema = z.object({
     matchId: z.number().int().nonnegative(),
@@ -42,23 +49,29 @@ app.post("/matches", async (req, res) => {
     }
 
     try {
-        const { contract, keyPair } = await getOracleWallet();
+        const { client, contract, keyPair } = await getOracleWallet();
+        const escrow = openEscrow(client);
 
-        // TODO once contract.ts is wired up:
-        // const escrow = client.open(Royal64Escrow.fromAddress(Address.parse(env.escrowAddress)));
-        // await escrow.send(contract.sender(keyPair.secretKey), { value: toNano("0.05") }, {
-        //     $$type: "CreateMatch",
-        //     matchId: BigInt(parsed.data.matchId),
-        //     playerA: Address.parse(parsed.data.playerA),
-        //     playerB: Address.parse(parsed.data.playerB),
-        //     stake: BigInt(parsed.data.stakeNanoTon),
-        //     depositDeadline: parsed.data.depositDeadline,
-        //     resolveDeadline: parsed.data.resolveDeadline,
-        // });
+        await escrow.send(
+            contract.sender(keyPair.secretKey),
+            { value: toNano("0.05") }, // gas for the contract's own outbound sends later
+            {
+                $$type: "CreateMatch",
+                matchId: BigInt(parsed.data.matchId),
+                playerA: Address.parse(parsed.data.playerA),
+                playerB: Address.parse(parsed.data.playerB),
+                stake: BigInt(parsed.data.stakeNanoTon),
+                depositDeadline: parsed.data.depositDeadline,
+                resolveDeadline: parsed.data.resolveDeadline,
+            }
+        );
 
-        res.status(501).json({
-            error: "contract.ts not wired up yet — see services/chain-writer/README.md",
-        });
+        // Sending an external message doesn't return a tx hash
+        // synchronously the way an RPC call would — the caller (our
+        // FastAPI backend) should poll GET /matches/:matchId to
+        // confirm the match actually landed on-chain before trusting
+        // it exists.
+        res.status(202).json({ status: "submitted", matchId: parsed.data.matchId });
 
     } catch (err) {
         console.error("createMatch failed", err);
@@ -75,14 +88,23 @@ app.post("/matches/:matchId/resolve", async (req, res) => {
         return;
     }
 
-    try {
-        // Same pattern as /matches above — send a DeclareResult message
-        // once contract.ts is wired up. Left unimplemented on purpose
-        // rather than guessed.
+    const matchId = BigInt(req.params.matchId);
 
-        res.status(501).json({
-            error: "contract.ts not wired up yet — see services/chain-writer/README.md",
-        });
+    try {
+        const { client, contract, keyPair } = await getOracleWallet();
+        const escrow = openEscrow(client);
+
+        await escrow.send(
+            contract.sender(keyPair.secretKey),
+            { value: toNano("0.1") }, // covers the two/three outbound payout sends
+            {
+                $$type: "DeclareResult",
+                matchId,
+                winner: parsed.data.winner ? Address.parse(parsed.data.winner) : null,
+            }
+        );
+
+        res.status(202).json({ status: "submitted" });
 
     } catch (err) {
         console.error("declareResult failed", err);
@@ -93,10 +115,24 @@ app.post("/matches/:matchId/resolve", async (req, res) => {
 app.get("/matches/:matchId", async (req, res) => {
 
     try {
-        // Read-only — call the contract's `match_` getter once wired up.
+        const { client } = await getOracleWallet();
+        const escrow = openEscrow(client);
 
-        res.status(501).json({
-            error: "contract.ts not wired up yet — see services/chain-writer/README.md",
+        const matchId = BigInt(req.params.matchId);
+        const match = await escrow.getMatchInfo(matchId);
+
+        if (!match) {
+            res.status(404).json({ error: "not found on-chain" });
+            return;
+        }
+
+        res.json({
+            playerA: match.playerA.toString(),
+            playerB: match.playerB.toString(),
+            stake: match.stake.toString(),
+            status: match.status,
+            depositedA: match.depositedA,
+            depositedB: match.depositedB,
         });
 
     } catch (err) {

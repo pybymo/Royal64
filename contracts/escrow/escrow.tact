@@ -238,15 +238,15 @@ contract Royal64Escrow with Deployable {
     // Getters
     // ------------------------------------------------------------------
 
-    get fun match_(matchId: Int): Match? {
+    get fun matchInfo(matchId: Int): Match? {
         return self.matches.get(matchId);
     }
 
-    get fun oracle_(): Address {
+    get fun oracleAddress(): Address {
         return self.oracle;
     }
 
-    get fun treasury_(): Address {
+    get fun treasuryAddress(): Address {
         return self.treasury;
     }
 }

@@ -1,32 +1,45 @@
 :root{
 
-  --bg:#0B0F17;
-  --surface:#141B26;
-  --surface-2:#1B2432;
+  /* True near-black, not the soft blue-tinted dark of a "premium
+     fintech" theme — this is the sharper, flatter web3 register. */
+  --bg:#050607;
+  --surface:#0F1113;
+  --surface-2:#17191C;
 
-  --primary:#5B8CFF;
-  --primary-hover:#7AA2FF;
+  /* TON's own brand blue as the accent — ties the UI to the chain
+     it's actually built on instead of a generic purple/indigo. */
+  --primary:#0098EA;
+  --primary-hover:#33ADEF;
+  --primary-press:#0077BD;
 
-  --success:#30D158;
-  --warning:#FFD60A;
-  --danger:#FF453A;
+  --success:#22C55E;
+  --warning:#F5B301;
+  --danger:#F23645;
 
-  --text:#FFFFFF;
-  --text-secondary:#A9B4C7;
-  --text-muted:#6C7A92;
+  --text:#F5F6F7;
+  --text-secondary:#9AA1AC;
+  --text-muted:#5B6169;
 
-  --border:#2B3547;
+  --border:#22262B;
+  --border-strong:#33383F;
 
-  --glass:rgba(255,255,255,.06);
+  --glass:rgba(255,255,255,.04);
 
-  --radius-sm:8px;
-  --radius-md:12px;
-  --radius-lg:18px;
-  --radius-xl:24px;
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:14px;
+  --radius-xl:20px;
 
-  --shadow-sm:0 2px 6px rgba(0,0,0,.15);
-  --shadow-md:0 6px 18px rgba(0,0,0,.25);
-  --shadow-lg:0 12px 32px rgba(0,0,0,.35);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4);
+  --shadow-md:0 4px 14px rgba(0,0,0,.5);
+  --shadow-lg:0 10px 28px rgba(0,0,0,.6);
+
+  --font-sans:"Inter","Segoe UI",Roboto,sans-serif;
+  /* Used for anything numeric/hash-like — wallet addresses, TON
+     amounts, clocks — a mono accent on figures is a small, deliberate
+     detail that reads as "built for crypto" rather than a generic
+     template. */
+  --font-mono:"JetBrains Mono","SF Mono",Consolas,monospace;
 
 }
 
@@ -38,11 +51,7 @@
 
 html{
 
-    font-family:
-    Inter,
-    Segoe UI,
-    Roboto,
-    sans-serif;
+    font-family:var(--font-sans);
 
     background:var(--bg);
 
@@ -82,6 +91,24 @@ input{
 
     outline:none;
 
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    color:var(--text);
+    padding:12px 14px;
+
+}
+
+input:focus{
+
+    border-color:var(--primary);
+
+}
+
+input::placeholder{
+
+    color:var(--text-muted);
+
 }
 
 a{
@@ -114,9 +141,15 @@ img{
 
 ::-webkit-scrollbar-thumb{
 
-    background:#2B3547;
+    background:var(--border-strong);
 
     border-radius:999px;
+
+}
+
+.mono{
+
+    font-family:var(--font-mono);
 
 }
 
@@ -128,7 +161,7 @@ img{
 
     -webkit-backdrop-filter:blur(18px);
 
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.06);
 
 }
 

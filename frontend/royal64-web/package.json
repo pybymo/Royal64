@@ -13,6 +13,8 @@
     "@tanstack/react-query": "^5.101.3",
     "@tonconnect/ui-react": "^2.4.0",
     "axios": "^1.18.1",
+    "chess.js": "^1.0.0-beta.8",
+    "react-chessboard": "^5.10.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
     "react": "^19.2.7",

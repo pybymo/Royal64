@@ -21,9 +21,9 @@ class Move(Base, UUIDMixin, TimestampMixin):
         nullable=False,
     )
 
-    player_id: Mapped[UUID] = mapped_column(
+    player_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id"),
-        nullable=False,
+        nullable=True,
     )
 
     move_number: Mapped[int] = mapped_column(

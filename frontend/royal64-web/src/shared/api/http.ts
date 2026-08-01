@@ -13,6 +13,13 @@ export async function api<T>(
 
     headers.set("Content-Type", "application/json");
 
+    // No-op against a normal server; only matters if API_URL points
+    // at an ngrok tunnel (e.g. phone testing) — ngrok's free tier
+    // otherwise returns its own HTML "visit site" interstitial instead
+    // of proxying the request, which looks exactly like "the backend
+    // is broken" from here.
+    headers.set("ngrok-skip-browser-warning", "true");
+
     if (accessToken) {
         headers.set("Authorization", `Bearer ${accessToken}`);
     }

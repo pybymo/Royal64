@@ -31,6 +31,7 @@ class MatchService:
             amount=offer.stake,
             currency="TON",
             games_required=GAMES_REQUIRED.get(offer.match_type, 1),
+            time_control_minutes=offer.time_control,
             status=MatchStatus.ACTIVE,
         )
 

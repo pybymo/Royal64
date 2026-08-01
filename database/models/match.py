@@ -59,6 +59,12 @@ class Match(Base, UUIDMixin, TimestampMixin):
         default=1,
     )
 
+    time_control_minutes: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=5,
+    )
+
     white_score: Mapped[int] = mapped_column(
         Integer,
         default=0,

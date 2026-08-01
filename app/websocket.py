@@ -1,11 +1,10 @@
 from uuid import UUID
 
-from fastapi import APIRouter
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from database.session import SessionLocal
+from services.game_loop_service import GameLoop, GameLoopError, authenticate, load_game
 from services.websocket_manager import WebSocketManager
-
 
 router = APIRouter()
 
@@ -14,41 +13,45 @@ manager = WebSocketManager()
 
 @router.websocket("/ws/game/{game_id}")
 async def game_socket(
-
     websocket: WebSocket,
-
     game_id: UUID,
-
+    token: str | None = None,
 ):
+    """
+    Auth is via a `?token=` query param carrying the same session JWT
+    issued by /auth/telegram — browsers can't attach custom headers to
+    a WebSocket handshake, so a header-based Bearer token (as used
+    everywhere else in this API) isn't an option here.
+    """
 
-    await manager.connect(
+    async with SessionLocal() as session:
 
-        game_id,
+        try:
+            user = await authenticate(token, session)
+            game = await load_game(game_id, user.id, session)
 
-        websocket,
+        except GameLoopError as exc:
+            await websocket.accept()
+            await websocket.send_json({"type": "error", "message": str(exc)})
+            await websocket.close(code=4001)
+            return
 
-    )
+        loop = GameLoop(manager, session, game, user)
 
-    try:
+        await manager.connect(game_id, websocket)
 
-        while True:
+        try:
+            await loop.on_connect(websocket)
 
-            payload = await websocket.receive_json()
+            while True:
 
-            await manager.broadcast(
+                payload = await websocket.receive_json()
 
-                game_id,
+                try:
+                    await loop.on_message(payload)
 
-                payload,
+                except GameLoopError as exc:
+                    await manager.send(websocket, {"type": "error", "message": str(exc)})
 
-            )
-
-    except WebSocketDisconnect:
-
-        await manager.disconnect(
-
-            game_id,
-
-            websocket,
-
-        )
+        except WebSocketDisconnect:
+            await manager.disconnect(game_id, websocket)

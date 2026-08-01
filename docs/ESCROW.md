@@ -2,19 +2,62 @@
 
 ## Status
 
-**Draft, untested on-chain.** The contract in `contracts/escrow/escrow.tact`
-has not been compiled, deployed, or run against a live network in this
-pass — this environment has no network access and no Tact toolchain
-installed, so nothing here has been verified beyond careful manual
-review. Before any real money touches this:
+**Draft, untested on-chain** until you complete the steps below.
 
-1. Compile it (`tact` / Blueprint) and fix whatever the compiler flags.
-2. Deploy to **testnet**, run every path below with real testnet TON,
-   including the failure paths (expired deposit, oracle silence,
-   overpayment, double-deposit attempts).
-3. Get an independent security audit before mainnet + real user funds.
-   This is standard practice for any contract that custodies money —
-   not optional, regardless of how carefully it was written.
+## Getting it running (testnet)
+
+1. **Separate Blueprint project** — Blueprint expects its own project
+   layout, so this doesn't build in place inside this repo:
+   ```
+   npm create ton@latest
+   ```
+   Choose **Tact**, empty project. Then:
+   ```
+   cd <your-project>
+   npm install
+   ```
+
+2. Copy `contracts/escrow/escrow.tact` from this repo into
+   `<your-project>/contracts/Royal64Escrow.tact`.
+
+3. Compile:
+   ```
+   npx blueprint build
+   ```
+   Fixes needed here are expected on a first compile that's never
+   touched an actual toolchain — send the errors back rather than
+   guessing at fixes blind.
+
+4. Test in the sandbox (no real network, no real funds) before going
+   anywhere near testnet:
+   ```
+   npx blueprint test
+   ```
+   Copy `contracts/escrow/blueprint-scripts/Royal64Escrow.spec.ts`
+   into `<your-project>/tests/` first — it covers the happy path,
+   the deposit-window-expired refund, and the ForceSplit safety net.
+
+5. Get testnet TON for three wallets (owner/deployer, oracle,
+   treasury — can reuse one for owner+treasury) via `@testgiver_ton_bot`
+   on Telegram, using a TON Keeper wallet switched to testnet mode.
+
+6. Copy `contracts/escrow/blueprint-scripts/deployRoyal64Escrow.ts`
+   into `<your-project>/scripts/`, fill in the oracle/treasury
+   addresses, then:
+   ```
+   npx blueprint run
+   ```
+   Confirm via TON Connect in TON Keeper (testnet mode). Verify the
+   result at `https://testnet.tonscan.org/address/<deployed address>`.
+
+7. Copy the generated wrapper into this repo's chain-writer service —
+   see `services/chain-writer/README.md` for the exact path and the
+   rest of the wiring (`.env`, endpoints).
+
+8. Before mainnet or any real money: get an independent security
+   audit. This is standard practice for any contract that custodies
+   funds, regardless of how carefully it was written or how well it
+   passes its own tests — not optional.
 
 ## Why a separate small TypeScript "chain-writer" service
 
@@ -93,3 +136,15 @@ Key invariants:
   two players accept an offer, watches deposit status, and — once the
   chess game finishes — tells the contract who won. It never touches
   the funds directly.
+
+## Status update: resolve() is now wired into game-over
+
+`services/game_loop_service.py` calls `PaymentService.resolve()` when a
+match is decided (Bo1: immediately; Bo3: once a player reaches
+majority — game 2/3 are now created automatically with colors swapped
+when a Bo3 isn't decided yet). This call is currently best-effort: if chain-writer is
+unreachable, the failure is swallowed rather than retried or alerted
+on. That's fine while chain-writer is still a stub with no real
+contract behind it, but **must** get a real retry/alerting mechanism
+before this handles actual funds — a swallowed exception on a payout
+call is not acceptable once money is real.

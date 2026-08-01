@@ -30,7 +30,7 @@ export function StatsCard({
 
                 </Text>
 
-                <Text variant="h2">
+                <Text variant="h2" mono>
 
                     {value}
 

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.match import Match
@@ -34,6 +34,28 @@ class MatchRepository:
         result = await self.session.execute(stmt)
 
         return result.scalar_one_or_none()
+
+    async def list_for_user(
+        self,
+        user_id: UUID,
+        limit: int = 50,
+    ):
+
+        stmt = (
+            select(Match)
+            .where(
+                or_(
+                    Match.white_player_id == user_id,
+                    Match.black_player_id == user_id,
+                )
+            )
+            .order_by(Match.created_at.desc())
+            .limit(limit)
+        )
+
+        result = await self.session.execute(stmt)
+
+        return list(result.scalars().all())
 
     async def save(
         self,

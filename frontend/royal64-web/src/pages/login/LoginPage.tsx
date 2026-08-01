@@ -1,4 +1,4 @@
-import { Card, Stack, Text } from "@/shared/ui";
+import { Card, Stack, Text, Loader } from "@/shared/ui";
 
 import { useAuthStore } from "@/features/auth/auth-store";
 
@@ -13,14 +13,17 @@ export function LoginPage() {
 
             <Stack gap={20}>
 
-                <Text>
+                <Text variant="h1">
                     Royal64
                 </Text>
 
                 {loading && (
-                    <Text variant="small">
-                        Signing you in...
-                    </Text>
+                    <Stack gap={8}>
+                        <Loader />
+                        <Text variant="small">
+                            Signing you in...
+                        </Text>
+                    </Stack>
                 )}
 
                 {error && (

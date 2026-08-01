@@ -33,7 +33,9 @@ class MoveService:
 
             uci="",
 
-            fen=ChessService.initial_fen(),
+            fen_after=ChessService.initial_fen(),
+
+            move_time_ms=0,
 
         )
 
@@ -52,6 +54,8 @@ class MoveService:
         current_fen,
 
         uci,
+
+        move_time_ms: int = 0,
 
     ):
 
@@ -77,7 +81,13 @@ class MoveService:
 
             uci=result["uci"],
 
-            fen=result["fen"],
+            fen_after=result["fen"],
+
+            move_time_ms=move_time_ms,
+
+            is_check=result["check"],
+
+            is_checkmate=result["checkmate"],
 
         )
 

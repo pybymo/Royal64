@@ -1,10 +1,50 @@
+import platform
+import shutil
 from pathlib import Path
 
 import chess
 import chess.engine
 
+from core.config import settings
 
-ENGINE_PATH = Path("stockfish") / "stockfish.exe"
+
+def _resolve_engine_path() -> str:
+    """
+    ENGINE_PATH was previously hardcoded to a Windows-only
+    `stockfish/stockfish.exe`, which doesn't exist on a Linux server —
+    every anti-cheat analysis call would fail at deploy time. Resolve
+    it properly instead:
+
+      1. explicit override via settings.STOCKFISH_PATH, if set
+      2. a binary already sitting in ./stockfish/ (any of the common
+         names, OS-appropriate)
+      3. whatever `stockfish` resolves to on PATH
+    """
+
+    if settings.STOCKFISH_PATH:
+        return settings.STOCKFISH_PATH
+
+    is_windows = platform.system() == "Windows"
+    candidates = (
+        ["stockfish.exe", "stockfish"] if is_windows else ["stockfish"]
+    )
+
+    local_dir = Path("stockfish")
+
+    for name in candidates:
+        candidate = local_dir / name
+        if candidate.exists():
+            return str(candidate)
+
+    on_path = shutil.which("stockfish")
+
+    if on_path:
+        return on_path
+
+    raise FileNotFoundError(
+        "Stockfish binary not found. Set STOCKFISH_PATH in .env, place a "
+        "binary in ./stockfish/, or install it so it's on PATH."
+    )
 
 
 class EngineService:
@@ -12,7 +52,7 @@ class EngineService:
     def __init__(self):
 
         self.engine = chess.engine.SimpleEngine.popen_uci(
-            str(ENGINE_PATH)
+            _resolve_engine_path()
         )
 
     def close(self):

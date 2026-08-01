@@ -1,62 +1,63 @@
-import { Card, Stack, Text } from "@/shared/ui";
+import { Link } from "react-router-dom";
+
+import { Card, Stack, Text, Button, Loader } from "@/shared/ui";
 
 import { WalletCard } from "@/widgets/walletcard";
 import { StatsCard } from "@/widgets/statscard";
 
-import { usePing } from "./hooks";
+import { useAuthStore } from "@/features/auth/auth-store";
+import { useWalletStore } from "@/features/wallet/wallet-store";
 
-import { Link } from "react-router-dom";
+import { usePing } from "./hooks";
 
 export function Dashboard() {
 
     const ping = usePing();
+    const user = useAuthStore((s) => s.user);
+    const wallet = useWalletStore((s) => s.wallet);
 
     return (
 
         <Stack gap={24}>
 
-            <WalletCard balance={10.35} />
-
-            <StatsCard title="Wins" value="25" />
-
-            <StatsCard title="Losses" value="8" />
-
-            <StatsCard title="Rating" value="1540" />
-
             <Card>
-
-                <Text>
-
-                    Backend :
-
-                    {
-
-                        ping.isSuccess
-
-                            ? " Connected"
-
-                            : " Waiting..."
-
-                    }
-
+                <Text variant="h2">
+                    {user?.username ? `@${user.username}` : "Player"}
                 </Text>
-
             </Card>
 
-            <Link to="/wallet">
+            <WalletCard balance={wallet.balance} />
 
-                Wallet
+            <StatsCard title="Wins" value={String(user?.wins ?? 0)} />
+            <StatsCard title="Losses" value={String(user?.losses ?? 0)} />
+            <StatsCard title="Draws" value={String(user?.draws ?? 0)} />
+            <StatsCard
+                title="Trust score"
+                value={user ? user.trustScore.toFixed(0) : "-"}
+            />
 
-            </Link>
+            <Card>
+                <Stack gap={8}>
+                    {ping.isLoading && <Loader />}
+                    <Text>
+                        Backend :
+                        {
+                            ping.isSuccess
+                                ? " Connected"
+                                : ping.isLoading
+                                    ? " Checking..."
+                                    : " Unreachable"
+                        }
+                    </Text>
+                </Stack>
+            </Card>
 
-            <Link to="/profile">
-
-                Profile
-
+            <Link to="/lobby">
+                <Button>
+                    Find a match
+                </Button>
             </Link>
 
         </Stack>
-
     );
-
 }
