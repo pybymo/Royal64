@@ -6,9 +6,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>royal64-web</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+      /* Inline, not from a stylesheet — this has to work even if
+         every single asset request fails. */
+      #boot-error {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #050607;
+        color: #F5F6F7;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 20px;
+        overflow: auto;
+        white-space: pre-wrap;
+        z-index: 99999;
+      }
+      #boot-error h1 {
+        color: #F23645;
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      #boot-error .diag {
+        color: #9AA1AC;
+        margin-top: 20px;
+        border-top: 1px solid #22262B;
+        padding-top: 12px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="boot-error"></div>
+
+    <script>
+      // Runs before the app bundle, has zero dependency on React/Vite
+      // working at all — the whole point is to catch failures THOSE
+      // would otherwise hide. A blank/dark screen on a phone inside
+      // Telegram, with no devtools available, is otherwise a
+      // completely invisible failure. This makes it visible instead.
+      (function () {
+        var shown = false;
+
+        function showError(title, detail) {
+          if (shown) return; // first error wins, don't spam
+          shown = true;
+
+          var box = document.getElementById("boot-error");
+          if (!box) return;
+
+          var diag = [
+            "window.Telegram present: " + (!!window.Telegram),
+            "window.Telegram.WebApp present: " + (!!(window.Telegram && window.Telegram.WebApp)),
+            "location: " + window.location.href,
+            "userAgent: " + navigator.userAgent,
+          ].join("\n");
+
+          box.innerHTML =
+            "<h1>" + title + "</h1>" +
+            "<div>" + detail + "</div>" +
+            "<div class='diag'>" + diag + "</div>";
+
+          box.style.display = "block";
+        }
+
+        window.addEventListener("error", function (event) {
+          showError(
+            "Script error",
+            (event.message || "unknown") +
+              "\n" +
+              (event.filename ? event.filename + ":" + event.lineno : "")
+          );
+        });
+
+        window.addEventListener("unhandledrejection", function (event) {
+          var reason = event.reason;
+          showError(
+            "Unhandled promise rejection",
+            reason && reason.stack ? reason.stack : String(reason)
+          );
+        });
+
+        // Belt and suspenders: if nothing has rendered into #root
+        // after 8s and no error fired either, something hung
+        // silently (e.g. a network request that never resolves) —
+        // say so instead of leaving a blank screen with no signal
+        // at all.
+        setTimeout(function () {
+          var root = document.getElementById("root");
+          if (root && root.children.length === 0 && !shown) {
+            showError(
+              "App never rendered",
+              "No script error was caught, but nothing appeared in #root " +
+                "after 8 seconds. Likely a hung network request (backend " +
+                "or TonConnect manifest unreachable through the tunnel) " +
+                "rather than a JS crash."
+            );
+          }
+        }, 8000);
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

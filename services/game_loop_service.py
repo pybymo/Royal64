@@ -17,23 +17,24 @@ Protocol (JSON messages over the game websocket):
     {"type": "game_over", "result": "WHITE"|"BLACK"|"DRAW", "reason": "..."}
     {"type": "error", "message": "..."}
 
-Known simplifications (see docs/ANTICHEAT.md-adjacent notes and the
-reply this shipped with): no server-side ticking clock broadcast (time
-is only checked/deducted when a move arrives, not announced every
-second), and the MVP's 60s-reconnect/3-strikes disconnect rules are
-not implemented — a disconnect is currently just... a disconnect.
-Both are real next steps, flagged rather than quietly skipped.
+Known simplifications: no server-side ticking clock broadcast (time is
+only checked/deducted when a move arrives, not announced every
+second). Disconnect handling (60s grace period, 3-strikes) is now
+implemented — see GameLoop.on_disconnect and _run_disconnect_timeout.
 """
 
+import asyncio
 from datetime import datetime, UTC
 from uuid import UUID
 
 import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import settings
 from core.security import decode_session_token
 from database.models.game import Game, GameResult as ORMGameResult, GameStatus
 from database.models.match import MatchStatus
+from database.session import SessionLocal
 from repositories.game_repository import GameRepository
 from repositories.match_repository import MatchRepository
 from repositories.user_repository import UserRepository
@@ -138,8 +139,95 @@ class GameLoop:
 
         state = _ensure_session(self.game)
 
+        was_inactive = (
+            not self.game.active_white if self.color == "white"
+            else not self.game.active_black
+        )
+
+        if was_inactive:
+
+            pending = game_sessions.pop_pending_disconnect(self.game.id, self.color)
+
+            if pending is not None:
+                pending.cancel()
+
+            if self.color == "white":
+                self.game.active_white = True
+            else:
+                self.game.active_black = True
+
+            await self.game_repo.save(self.game)
+
+            await self.manager.broadcast(
+                self.game.id,
+                {"type": "reconnected", "color": self.color},
+            )
+
         await self.manager.send(websocket, {"type": "you", "color": self.color})
         await self.manager.send(websocket, _state_payload(state))
+
+    async def on_disconnect(self) -> None:
+        """
+        Called from app/websocket.py's WebSocketDisconnect handler.
+        Marks this color inactive, counts the disconnect, and either
+        starts a grace-period timer or — past the strike limit — ends
+        the game immediately.
+        """
+
+        state = game_sessions.get(self.game.id)
+
+        if state is None or state.finished:
+            return
+
+        if self.color == "white":
+            self.game.active_white = False
+            self.game.disconnect_white += 1
+            disconnect_count = self.game.disconnect_white
+        else:
+            self.game.active_black = False
+            self.game.disconnect_black += 1
+            disconnect_count = self.game.disconnect_black
+
+        await self.game_repo.save(self.game)
+
+        if disconnect_count > settings.MAX_DISCONNECTS_PER_PLAYER:
+
+            winner_color = "BLACK" if self.color == "white" else "WHITE"
+
+            await self.manager.broadcast(
+                self.game.id,
+                {
+                    "type": "disconnected",
+                    "color": self.color,
+                    "final": True,
+                    "disconnect_count": disconnect_count,
+                },
+            )
+
+            await self._finish(winner=winner_color, reason="disconnected_too_many_times")
+
+            return
+
+        await self.manager.broadcast(
+            self.game.id,
+            {
+                "type": "disconnected",
+                "color": self.color,
+                "final": False,
+                "grace_seconds": settings.DISCONNECT_GRACE_SECONDS,
+                "disconnect_count": disconnect_count,
+            },
+        )
+
+        task = asyncio.create_task(
+            _run_disconnect_timeout(
+                self.manager,
+                self.game.id,
+                self.color,
+            )
+        )
+
+        game_sessions.set_pending_disconnect(self.game.id, self.color, task)
 
     async def on_message(self, payload: dict) -> None:
 
@@ -345,3 +433,54 @@ class GameLoop:
 
         except Exception:
             pass
+
+
+async def _run_disconnect_timeout(
+    manager: WebSocketManager,
+    game_id: UUID,
+    color: str,
+) -> None:
+    """
+    Fires `settings.DISCONNECT_GRACE_SECONDS` after a disconnect. Runs
+    independently of the connection that scheduled it — that
+    connection's request-scoped DB session is long closed by the time
+    this executes, so it opens its own.
+    """
+
+    try:
+        await asyncio.sleep(settings.DISCONNECT_GRACE_SECONDS)
+
+    except asyncio.CancelledError:
+        # Reconnected in time — GameLoop.on_connect cancels this task.
+        return
+
+    async with SessionLocal() as session:
+
+        game_repo = GameRepository(session)
+        game = await game_repo.get_by_id(game_id)
+
+        if game is None or game.status != GameStatus.PLAYING:
+            return
+
+        state = game_sessions.get(game_id)
+
+        if state is None or state.finished:
+            return
+
+        still_inactive = (
+            not game.active_white if color == "white" else not game.active_black
+        )
+
+        if not still_inactive:
+            # Reconnected right as the timer was about to fire, and
+            # lost the race with cancellation — don't end the game.
+            return
+
+        winner_color = "BLACK" if color == "white" else "WHITE"
+
+        # _finish/_settle_match only touch self.game/self.db/repos/
+        # services/self.manager — never self.user or self.color — so
+        # a GameLoop with no user is safe to use purely for settlement.
+        loop = GameLoop(manager, session, game, user=None)
+
+        await loop._finish(winner=winner_color, reason="disconnect_timeout")

@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 
 import { router } from "@/app/Router";
 import { AppProviders } from "@/app/providers/AppProviders";
+import { ErrorBoundary } from "@/app/ErrorBoundary";
 
 import "@/shared/theme/globals.scss";
 
@@ -12,11 +13,15 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
     <React.StrictMode>
 
-        <AppProviders>
+        <ErrorBoundary>
 
-            <RouterProvider router={router} />
+            <AppProviders>
 
-        </AppProviders>
+                <RouterProvider router={router} />
+
+            </AppProviders>
+
+        </ErrorBoundary>
 
     </React.StrictMode>
 

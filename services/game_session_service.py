@@ -35,6 +35,13 @@ class GameSessionService:
 
         self.sessions: dict[UUID, GameSession] = {}
 
+        # game_id -> {"white": asyncio.Task, "black": asyncio.Task}
+        # for the pending 60s-grace-period timers. Lives here rather
+        # than on GameSession itself since asyncio.Task isn't really
+        # "game state" — it's connection-handling plumbing — but it
+        # needs the same shared-across-connections lifetime.
+        self.pending_disconnects: dict[UUID, dict[str, object]] = {}
+
     def create(
 
         self,
@@ -93,6 +100,25 @@ class GameSessionService:
 
         self.sessions.pop(game_id, None)
 
+        pending = self.pending_disconnects.pop(game_id, None)
+
+        if pending:
+            for task in pending.values():
+                task.cancel()
+
+    def set_pending_disconnect(self, game_id, color: str, task) -> None:
+
+        self.pending_disconnects.setdefault(game_id, {})[color] = task
+
+    def pop_pending_disconnect(self, game_id, color: str):
+
+        bucket = self.pending_disconnects.get(game_id)
+
+        if not bucket:
+            return None
+
+        return bucket.pop(color, None)
+
     def update_fen(
 
         self,
@@ -130,6 +156,12 @@ class GameSessionService:
     ):
 
         self.sessions[game_id].finished = True
+
+        pending = self.pending_disconnects.pop(game_id, None)
+
+        if pending:
+            for task in pending.values():
+                task.cancel()
 
 
 # Module-level singleton — in-memory game state needs to be shared

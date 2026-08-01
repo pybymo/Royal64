@@ -55,3 +55,4 @@ async def game_socket(
 
         except WebSocketDisconnect:
             await manager.disconnect(game_id, websocket)
+            await loop.on_disconnect()

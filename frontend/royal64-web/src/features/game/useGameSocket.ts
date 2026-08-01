@@ -21,6 +21,11 @@ interface NextGameInfo {
     gameNumber: number;
 }
 
+interface OpponentDisconnectInfo {
+    color: "white" | "black";
+    graceSeconds: number;
+}
+
 export function useGameSocket(gameId: string) {
 
     const token = useSessionStore((s) => s.session?.accessToken);
@@ -29,6 +34,8 @@ export function useGameSocket(gameId: string) {
     const [myColor, setMyColor] = useState<"white" | "black" | null>(null);
     const [gameOver, setGameOver] = useState<GameOverInfo | null>(null);
     const [nextGame, setNextGame] = useState<NextGameInfo | null>(null);
+    const [opponentDisconnect, setOpponentDisconnect] =
+        useState<OpponentDisconnectInfo | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [connected, setConnected] = useState(false);
 
@@ -75,6 +82,19 @@ export function useGameSocket(gameId: string) {
 
                 setNextGame({ gameId: msg.game_id, gameNumber: msg.game_number });
 
+            } else if (msg.type === "disconnected") {
+
+                if (!msg.final) {
+                    setOpponentDisconnect({
+                        color: msg.color,
+                        graceSeconds: msg.grace_seconds,
+                    });
+                }
+
+            } else if (msg.type === "reconnected") {
+
+                setOpponentDisconnect(null);
+
             } else if (msg.type === "error") {
 
                 setError(msg.message);
@@ -102,5 +122,15 @@ export function useGameSocket(gameId: string) {
 
     }, []);
 
-    return { state, myColor, gameOver, nextGame, error, connected, sendMove, resign };
+    return {
+        state,
+        myColor,
+        gameOver,
+        nextGame,
+        opponentDisconnect,
+        error,
+        connected,
+        sendMove,
+        resign,
+    };
 }

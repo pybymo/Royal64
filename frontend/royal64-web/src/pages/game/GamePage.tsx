@@ -24,7 +24,7 @@ export function GamePage() {
     const { gameId } = useParams<{ gameId: string }>();
     const navigate = useNavigate();
 
-    const { state, myColor, gameOver, nextGame, error, connected, sendMove, resign } =
+    const { state, myColor, gameOver, nextGame, opponentDisconnect, error, connected, sendMove, resign } =
         useGameSocket(gameId!);
 
     const boardTheme = useBoardThemeStore((s) => s.theme);
@@ -92,6 +92,15 @@ export function GamePage() {
                     </Text>
                 </Stack>
             </Card>
+
+            {opponentDisconnect && (
+                <Card>
+                    <Text variant="small">
+                        Opponent disconnected — {opponentDisconnect.graceSeconds}s to
+                        reconnect before they lose on time.
+                    </Text>
+                </Card>
+            )}
 
             <BoardThemePicker value={boardTheme} onChange={setBoardTheme} />
 

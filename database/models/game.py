@@ -71,6 +71,11 @@ class Game(Base, UUIDMixin, TimestampMixin):
         default=True,
     )
 
+    active_black: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+    )
+
     disconnect_white: Mapped[int] = mapped_column(
         Integer,
         default=0,

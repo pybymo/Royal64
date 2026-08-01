@@ -9,6 +9,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  server: {
+    // Vite's dev server rejects any request whose Host header doesn't
+    // match localhost/127.0.0.1 by default (DNS-rebinding protection).
+    // Going through an ngrok tunnel, the Host header IS the ngrok
+    // domain — every request gets silently blocked ("Blocked request.
+    // This host is not allowed.") unless explicitly allowed. `true`
+    // here disables the allowlist entirely, which is fine for a
+    // temporary dev tunnel but should not be treated as a production
+    // setting.
+    host: true,
+    allowedHosts: true,
+  },
   build: {
     rollupOptions: {
       output: {

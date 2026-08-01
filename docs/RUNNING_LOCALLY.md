@@ -88,6 +88,51 @@ these fixes, this is why:
    issue, but the very next thing that would have broken once initData
    worked — added in `app/main.py`, controlled by `CORS_ORIGINS`.
 
+## Troubleshooting: blank/dark screen when opening the Mini App
+
+This is the hardest failure mode to debug on a phone specifically
+because there's no devtools/console inside Telegram's in-app browser —
+a JS error there was previously just... invisible. Three things
+changed to make this solvable instead of a dead end:
+
+1. **Vite's dev server was rejecting the tunnel's requests outright.**
+   Vite blocks any request whose `Host` header isn't localhost by
+   default (DNS-rebinding protection) — going through ngrok, the Host
+   header *is* the ngrok domain, so every request could get rejected
+   with "Blocked request. This host is not allowed." before the app
+   ever had a chance to render. `vite.config.ts` now sets
+   `server.allowedHosts: true`. Fine for a temporary dev tunnel, not a
+   production setting.
+
+2. **Errors are now visible on the device itself.** Two layers:
+   - A plain-JS catcher in `index.html` (`window.onerror`,
+     `unhandledrejection`, and an 8-second "nothing rendered" timeout)
+     that works even if the React bundle itself fails to load — it has
+     zero dependency on anything else working.
+   - A React `ErrorBoundary` (`src/app/ErrorBoundary.tsx`) wrapping the
+     whole app for a properly styled crash screen on render errors
+     specifically.
+
+   Either way, from now on a failure shows actual error text on the
+   phone screen instead of a silent blank/dark page. **Reload the Mini
+   App and send whatever text appears now** — that pins the exact
+   remaining cause, if there is one, instead of guessing further.
+
+3. **Recommend testing with a production build, not `pnpm dev`, through
+   the tunnel.** Dev mode serves the app as hundreds of individual
+   unbundled ES module requests — over a phone's mobile connection
+   through a free tunnel, that's a lot of things that can time out or
+   fail individually, and failures partway through module loading can
+   leave a half-loaded page. A production build is 4-5 bundled chunks
+   (thanks to the `manualChunks` split) — far more robust for this
+   exact scenario:
+   ```
+   pnpm build
+   pnpm preview --host
+   ```
+   Point the `ngrok http` tunnel at the `preview` port instead of the
+   dev server's port, and update `WEBAPP_URL` accordingly.
+
 ### If it's still slow/broken after those fixes, check next
 
 - **ngrok's free-tier browser warning page**: by default ngrok shows

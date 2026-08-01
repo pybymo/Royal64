@@ -91,6 +91,13 @@ class Settings(BaseSettings):
     # coefficient of variation in per-move time suggests automation.
     ANTICHEAT_TIMING_CV_FLAG_THRESHOLD: float = 0.12
 
+    # --- Disconnect handling ---
+    # Per the MVP: a disconnected player gets this long to reconnect
+    # before losing on time; each player gets a limited number of such
+    # grace periods before the next disconnect is an immediate loss.
+    DISCONNECT_GRACE_SECONDS: int = 60
+    MAX_DISCONNECTS_PER_PLAYER: int = 3
+
 
 @lru_cache
 def get_settings() -> Settings:
