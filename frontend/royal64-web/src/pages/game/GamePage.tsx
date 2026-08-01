@@ -4,6 +4,7 @@ import { Chessboard } from "react-chessboard";
 
 import { Button, BoardThemePicker, Card, PromotionPicker, Stack, Text, Loader } from "@/shared/ui";
 import { useGameSocket } from "@/features/game/useGameSocket";
+import { WinCard } from "@/features/game/WinCard";
 import { useBoardThemeStore } from "@/features/game/board-theme-store";
 import { BOARD_THEMES, buildSquareStyles } from "@/shared/theme/boardThemes";
 import { playMoveSound } from "@/shared/audio/moveSounds";
@@ -163,13 +164,19 @@ export function GamePage() {
 
             {gameOver ? (
 
-                <Card>
-                    <Stack gap={8}>
-                        <Text variant="h3">
-                            Game over — {gameOver.result} ({gameOver.reason})
-                        </Text>
-                    </Stack>
-                </Card>
+                <Stack gap={12}>
+
+                    <Card>
+                        <Stack gap={8}>
+                            <Text variant="h3">
+                                Game over — {gameOver.result} ({gameOver.reason})
+                            </Text>
+                        </Stack>
+                    </Card>
+
+                    <WinCard gameId={gameId!} />
+
+                </Stack>
 
             ) : (
 

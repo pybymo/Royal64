@@ -5,6 +5,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import String
 
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -46,6 +47,10 @@ class Game(Base, UUIDMixin, TimestampMixin):
 
     result: Mapped[GameResult | None] = mapped_column(
         SQLEnum(GameResult),
+    )
+
+    end_reason: Mapped[str | None] = mapped_column(
+        String(32),
     )
 
     time_control_minutes: Mapped[int] = mapped_column(

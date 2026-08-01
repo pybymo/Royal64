@@ -239,6 +239,7 @@ class GameLoop:
 
         self.game.status = GameStatus.FINISHED
         self.game.result = ORMGameResult(winner) if winner != "DRAW" else ORMGameResult.DRAW
+        self.game.end_reason = reason
 
         await self.game_repo.save(self.game)
 
