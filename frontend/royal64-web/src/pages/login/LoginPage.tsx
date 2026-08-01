@@ -1,6 +1,7 @@
 import { Card, Stack, Text, Loader } from "@/shared/ui";
 
 import { useAuthStore } from "@/features/auth/auth-store";
+import { API_URL } from "@/shared/api/http";
 
 export function LoginPage() {
 
@@ -27,9 +28,14 @@ export function LoginPage() {
                 )}
 
                 {error && (
-                    <Text variant="small">
-                        {error}
-                    </Text>
+                    <Stack gap={8}>
+                        <Text variant="small">
+                            {error}
+                        </Text>
+                        <Text variant="small" mono>
+                            API_URL: {API_URL}
+                        </Text>
+                    </Stack>
                 )}
 
             </Stack>

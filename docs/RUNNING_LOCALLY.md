@@ -133,6 +133,33 @@ changed to make this solvable instead of a dead end:
    Point the `ngrok http` tunnel at the `preview` port instead of the
    dev server's port, and update `WEBAPP_URL` accordingly.
 
+### If sign-in shows "Load failed" (or "Failed to fetch")
+
+This is the browser's own generic message for a network-level request
+failure — Safari/WebKit literally says just "Load failed" with no
+detail, which reads like the app broke rather than "couldn't reach the
+API". As of this pass, that raw message is replaced with a clearer one
+telling you the exact URL it tried and reminding you what to check —
+and the login screen now shows `API_URL:` directly under any sign-in
+error, so you can see exactly what the app is configured to hit.
+Checklist, in order:
+
+1. **`frontend/royal64-web/.env` — `VITE_API_URL`** must be the
+   backend's ngrok URL, `https://...`, not `http://127.0.0.1:8000`.
+   From a phone, `127.0.0.1` means the phone itself — there's nothing
+   listening there.
+2. **You must rebuild after changing it.** `VITE_API_URL` is baked
+   into the bundle at build time, not read at runtime — `pnpm build`
+   again (or restart `pnpm dev`) after any `.env` change here.
+3. **Backend `.env` — `CORS_ORIGINS`** must include the frontend's
+   exact ngrok origin (`https://<frontend-ngrok-domain>`, no trailing
+   slash, no path). The default only allows `localhost:5173`.
+4. **Both URLs must be `https://`.** A `https://` frontend calling a
+   plain `http://` backend gets blocked as mixed content, which can
+   also surface as this same generic failure.
+5. Restart the backend after changing `CORS_ORIGINS` — it's read once
+   at startup.
+
 ### If it's still slow/broken after those fixes, check next
 
 - **ngrok's free-tier browser warning page**: by default ngrok shows
