@@ -1,7 +1,8 @@
+import type { PropsWithChildren } from "react";
 import "./Text.scss";
 import clsx from "clsx";
 
-type Props = React.PropsWithChildren<{
+type Props = PropsWithChildren<{
 
     variant?:
     |"h1"

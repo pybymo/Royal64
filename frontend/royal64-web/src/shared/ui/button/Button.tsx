@@ -1,7 +1,8 @@
+import type { ButtonHTMLAttributes } from "react";
 import "./Button.scss";
 import clsx from "clsx";
 
-type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary";
 };
 

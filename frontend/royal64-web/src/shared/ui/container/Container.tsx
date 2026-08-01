@@ -1,6 +1,7 @@
+import type { PropsWithChildren } from "react";
 import "./Container.scss";
 
-type Props = React.PropsWithChildren;
+type Props = PropsWithChildren;
 
 export function Container({ children }: Props) {
     return (
