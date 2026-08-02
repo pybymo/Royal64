@@ -1,7 +1,10 @@
+import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from loguru import logger
 
 from app.startup import startup
 from app.websocket import router as websocket_router
@@ -43,6 +46,55 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Every request/response logged with timing — this is what makes
+    "the frontend just spins forever" debuggable at all: if a request
+    never shows up here, the problem is network/tunnel, not this app;
+    if it shows up but takes a very long time or 500s, that's this
+    app's problem specifically, and the traceback below says where.
+    """
+
+    start = time.monotonic()
+
+    try:
+        response = await call_next(request)
+
+    except Exception:
+        logger.exception(f"{request.method} {request.url.path} -> unhandled exception")
+        raise
+
+    duration_ms = (time.monotonic() - start) * 1000
+
+    logger.info(
+        f"{request.method} {request.url.path} -> {response.status_code} "
+        f"({duration_ms:.0f}ms)"
+    )
+
+    return response
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """
+    Catches anything that isn't already an HTTPException (those are
+    handled by FastAPI itself with their own status code). Without
+    this, an unexpected bug anywhere in a route produces a bare 500
+    with no JSON body — this at least always gives the frontend
+    something to display instead of a fetch that succeeds with an
+    unparseable response.
+    """
+
+    logger.exception(f"Unhandled exception on {request.method} {request.url.path}")
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal error: {exc.__class__.__name__}: {exc}"},
+    )
+
 
 app.include_router(
     websocket_router

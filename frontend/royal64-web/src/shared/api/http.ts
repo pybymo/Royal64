@@ -2,6 +2,8 @@ import { useSessionStore } from "@/features/auth/session-store";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+const REQUEST_TIMEOUT_MS = 15000;
+
 export async function api<T>(
     url: string,
     init?: RequestInit
@@ -24,15 +26,33 @@ export async function api<T>(
         headers.set("Authorization", `Bearer ${accessToken}`);
     }
 
+    // Without this, a request that never gets a response (tunnel
+    // hiccup, backend hung, dropped connection) spins the caller's
+    // loading state forever with zero feedback — indistinguishable
+    // from "still working on it" to whoever's watching a spinner.
+    // 15s is generous for any of this app's actual endpoints.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     let r: Response;
 
     try {
         r = await fetch(API_URL + url, {
             ...init,
             headers,
+            signal: controller.signal,
         });
 
     } catch (err) {
+
+        if (err instanceof DOMException && err.name === "AbortError") {
+            throw new Error(
+                `Request to ${API_URL}${url} timed out after ${REQUEST_TIMEOUT_MS / 1000}s. ` +
+                `The backend didn't respond in time — check it's actually running ` +
+                `and reachable at that address.`
+            );
+        }
+
         // A network-level failure (DNS, connection refused, CORS
         // preflight rejected, mixed content) throws a TypeError here
         // with an unhelpful, browser-specific message — WebKit/Safari
@@ -48,6 +68,9 @@ export async function api<T>(
             `origin (${window.location.origin}). ` +
             `Original error: ${err instanceof Error ? err.message : String(err)}`
         );
+
+    } finally {
+        clearTimeout(timeout);
     }
 
     if (!r.ok) {

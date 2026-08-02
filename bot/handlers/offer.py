@@ -3,6 +3,8 @@ from uuid import UUID
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
+from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.types import Message
 
 from database.session import SessionLocal
@@ -11,6 +13,8 @@ from core.exceptions import EscrowError, PlayerWalletNotVerifiedError
 
 from repositories.offer_repository import OfferRepository
 from repositories.user_repository import UserRepository
+
+from schemas.offer import OfferCreate
 
 from services.offer_service import OfferService
 
@@ -110,9 +114,39 @@ async def offer_timer(message: Message, state: FSMContext):
 
     await state.clear()
 
+    async with SessionLocal() as session:
+
+        user_repo = UserRepository(session)
+        owner = await user_repo.get_by_telegram_id(message.from_user.id)
+
+        if owner is None:
+            await message.answer("Please /start the bot first.")
+            return
+
+        service = OfferService(session)
+
+        try:
+            offer = await service.create(
+                owner,
+                OfferCreate(
+                    stake=data["stake"],
+                    match_type=data["match_type"],
+                    time_control=data["time_control"],
+                ),
+            )
+
+        except PlayerWalletNotVerifiedError:
+            await message.answer(
+                "⚠️ Connect and verify a TON wallet before creating a paid offer."
+            )
+            return
+
     await message.answer(
         f"""
-♟ Offer Preview
+✅ Offer Created
+
+ID
+{offer.id}
 
 Stake
 {data["stake"]} TON
@@ -123,9 +157,40 @@ Match
 Clock
 {data["time_control"]} Minutes
 
-(Database step next)
+Waiting for someone to accept.
 """
     )
+
+
+@router.callback_query(F.data == "offer_list")
+async def list_offers(callback: CallbackQuery):
+
+    async with SessionLocal() as session:
+
+        service = OfferService(session)
+        offers = await service.list_open()
+
+    if not offers:
+        await callback.message.answer("No open offers right now.")
+        await callback.answer()
+        return
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text=f"{offer.stake} TON · {offer.match_type.value} · {offer.time_control}min",
+                callback_data=f"offer_accept:{offer.id}",
+            )
+        ]
+        for offer in offers[:10]
+    ]
+
+    await callback.message.answer(
+        "🎯 Open Matches — tap one to accept:",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+    )
+
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("offer_accept:"))
