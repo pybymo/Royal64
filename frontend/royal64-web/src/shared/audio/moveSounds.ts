@@ -1,4 +1,5 @@
 import type { BoardThemeId } from "@/shared/theme/boardThemes";
+import { useSoundStore } from "./sound-store";
 
 /**
  * Move sounds are synthesized with the Web Audio API rather than
@@ -92,6 +93,10 @@ function playMetal(audioCtx: AudioContext) {
 }
 
 export function playMoveSound(theme: BoardThemeId) {
+
+    if (!useSoundStore.getState().enabled) {
+        return;
+    }
 
     try {
         const audioCtx = getContext();

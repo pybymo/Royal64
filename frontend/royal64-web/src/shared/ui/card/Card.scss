@@ -1,13 +1,15 @@
 .r64-card{
 
-    background:var(--surface);
+    background:linear-gradient(180deg, var(--surface) 0%, var(--bg-elevated) 100%);
 
     border:1px solid var(--border);
 
-    padding:20px;
+    padding:22px;
 
     border-radius:var(--radius-lg);
 
     box-shadow:var(--shadow-sm);
+
+    position:relative;
 
 }

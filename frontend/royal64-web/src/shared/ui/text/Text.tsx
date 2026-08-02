@@ -11,10 +11,13 @@ type Props = PropsWithChildren<{
     |"body"
     |"small";
 
-    /** Switches to the monospace face — use for TON amounts, wallet
-     * addresses, clocks, and other figures where a crypto-app reads
-     * as more deliberate than plain body text. */
+    /** Switches to the monospace face — TON amounts, wallet addresses,
+     * clocks, and other figures. */
     mono?:boolean;
+
+    /** Renders in Orbitron with the gold gradient fill — headline
+     * moments only (splash, victory, section titles), not body copy. */
+    display?:boolean;
 
 }>;
 
@@ -24,13 +27,15 @@ export function Text({
 
     mono=false,
 
+    display=false,
+
     children
 
 }:Props){
 
     return(
 
-        <div className={clsx("r64-text",variant, mono && "mono")}>
+        <div className={clsx("r64-text",variant, mono && "mono", display && "display gold-text")}>
 
             {children}
 

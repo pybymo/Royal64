@@ -6,6 +6,7 @@ const ITEMS = [
     { to: "/dashboard", icon: "🏠", label: "Home" },
     { to: "/lobby", icon: "♟️", label: "Play" },
     { to: "/wallet", icon: "💰", label: "Wallet" },
+    { to: "/history", icon: "📜", label: "History" },
     { to: "/profile", icon: "👤", label: "Profile" },
 ];
 
@@ -24,7 +25,8 @@ export function BottomNavigation() {
                         isActive ? "active" : undefined
                     }
                 >
-                    {item.icon}
+                    <span>{item.icon}</span>
+                    <span className="label">{item.label}</span>
                 </NavLink>
             ))}
 

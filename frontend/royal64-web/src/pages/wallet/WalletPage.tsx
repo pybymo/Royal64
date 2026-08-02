@@ -8,60 +8,87 @@ export function WalletPage() {
 
     return (
 
-        <Card>
+        <Stack gap={20}>
 
-            <Stack gap={20}>
+            <Text variant="h2" display>
+                Wallet
+            </Text>
 
-                <Text variant="h2">
-                    Wallet
-                </Text>
+            <div
+                style={{
+                    background: "var(--gradient-gold)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: "26px 22px",
+                    boxShadow: "var(--shadow-gold)",
+                }}
+            >
+                <div style={{ color: "#3A2C0A", fontWeight: 700, fontSize: 13 }}>
+                    TOTAL BALANCE
+                </div>
 
-                <Text variant="h1" mono>
+                <div
+                    className="mono"
+                    style={{
+                        fontSize: 36,
+                        fontWeight: 800,
+                        color: "#1A1305",
+                        marginTop: 6,
+                    }}
+                >
                     {wallet.balance.toFixed(2)} TON
-                </Text>
+                </div>
 
-                <Text variant="small" mono>
-                    Locked in escrow: {wallet.locked.toFixed(2)} TON
-                </Text>
+                <div className="mono" style={{ color: "#4A3A10", fontSize: 13, marginTop: 4 }}>
+                    {wallet.locked.toFixed(2)} TON locked in active escrow
+                </div>
+            </div>
 
-                {wallet.address ? (
+            <Card>
+                <Stack gap={14}>
 
-                    <Stack gap={10}>
+                    <Text variant="h3">
+                        TON Connect
+                    </Text>
 
-                        <Badge
-                            text={wallet.isVerified ? "Verified" : "Pending"}
-                            variant={wallet.isVerified ? "success" : "warning"}
-                        />
+                    {wallet.address ? (
 
-                        <Text variant="small" mono>
-                            {wallet.address}
-                        </Text>
+                        <Stack gap={10}>
 
-                        <Button variant="secondary" onClick={disconnect}>
-                            Disconnect
+                            <Badge
+                                text={wallet.isVerified ? "Verified" : "Pending"}
+                                variant={wallet.isVerified ? "success" : "warning"}
+                            />
+
+                            <Text variant="small" mono>
+                                {wallet.address}
+                            </Text>
+
+                            <Button variant="secondary" onClick={disconnect}>
+                                Disconnect
+                            </Button>
+
+                        </Stack>
+
+                    ) : (
+
+                        <Button onClick={connect} disabled={connecting}>
+                            {connecting ? "Connecting..." : "Connect Wallet"}
                         </Button>
 
-                    </Stack>
+                    )}
 
-                ) : (
+                </Stack>
+            </Card>
 
-                    <Button onClick={connect} disabled={connecting}>
-                        {connecting ? "Connecting..." : "Connect Wallet"}
-                    </Button>
+            {error && (
+                <Card>
+                    <Text variant="small">
+                        {error}
+                    </Text>
+                </Card>
+            )}
 
-                )}
-
-                {error && (
-                    <Card>
-                        <Text variant="small">
-                            {error}
-                        </Text>
-                    </Card>
-                )}
-
-            </Stack>
-
-        </Card>
+        </Stack>
 
     );
 

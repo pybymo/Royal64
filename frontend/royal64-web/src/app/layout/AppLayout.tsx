@@ -6,7 +6,17 @@ export function AppLayout({ children }: PropsWithChildren) {
     return (
         <>
             <Header />
-            {children}
+
+            <main
+                style={{
+                    padding: "20px 16px 100px",
+                    maxWidth: 480,
+                    margin: "0 auto",
+                }}
+            >
+                {children}
+            </main>
+
             <BottomNavigation />
         </>
     );

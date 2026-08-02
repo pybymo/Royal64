@@ -1,20 +1,22 @@
 .r64-button{
 
-    padding:14px 22px;
+    padding:15px 24px;
 
     border-radius:var(--radius-md);
 
-    font-weight:600;
+    font-weight:700;
 
     font-size:15px;
 
-    transition:background-color .15s ease, border-color .15s ease, opacity .15s ease;
+    letter-spacing:.01em;
+
+    transition:transform .12s ease, box-shadow .2s ease, filter .15s ease;
 
 }
 
 .r64-button:disabled{
 
-    opacity:.5;
+    opacity:.45;
 
     cursor:not-allowed;
 
@@ -22,27 +24,31 @@
 
 .r64-button.primary{
 
-    background:var(--primary);
+    background:var(--gradient-gold);
 
-    color:#fff;
+    color:#1A1305;
+
+    box-shadow:0 4px 20px var(--gold-glow);
 
 }
 
 .r64-button.primary:hover:not(:disabled){
 
-    background:var(--primary-hover);
+    filter:brightness(1.08);
+
+    box-shadow:0 6px 28px var(--gold-glow);
 
 }
 
 .r64-button.primary:active:not(:disabled){
 
-    background:var(--primary-press);
+    transform:scale(.97);
 
 }
 
 .r64-button.secondary{
 
-    background:transparent;
+    background:var(--surface-2);
 
     border:1px solid var(--border-strong);
 
@@ -52,8 +58,14 @@
 
 .r64-button.secondary:hover:not(:disabled){
 
-    border-color:var(--primary);
+    border-color:var(--gold);
 
-    color:var(--primary);
+    color:var(--gold-bright);
+
+}
+
+.r64-button.secondary:active:not(:disabled){
+
+    transform:scale(.97);
 
 }

@@ -7,6 +7,7 @@ import { LobbyPage } from "@/pages/lobby";
 import { GamePage } from "@/pages/game";
 import { HistoryPage } from "@/pages/history";
 import { ProfilePage } from "@/pages/profile";
+import { SettingsPage } from "@/pages/settings";
 import { WalletPage } from "@/pages/wallet";
 import { Dashboard } from "@/features/dashboard";
 
@@ -20,12 +21,12 @@ function withLayout(element: ReactNode) {
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: withLayout(<HomePage />),
+        element: <HomePage />,
     },
 
     {
         path: "/login",
-        element: withLayout(<LoginPage />),
+        element: <LoginPage />,
     },
 
     {
@@ -78,6 +79,15 @@ export const router = createBrowserRouter([
         element: withLayout(
             <AuthGuard>
                 <WalletPage />
+            </AuthGuard>
+        ),
+    },
+
+    {
+        path: "/settings",
+        element: withLayout(
+            <AuthGuard>
+                <SettingsPage />
             </AuthGuard>
         ),
     },

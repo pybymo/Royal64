@@ -1,44 +1,56 @@
 :root{
 
-  /* True near-black, not the soft blue-tinted dark of a "premium
-     fintech" theme — this is the sharper, flatter web3 register. */
-  --bg:#050607;
-  --surface:#0F1113;
-  --surface-2:#17191C;
+  /* Dark premium "console UI" register — near-black with a faint
+     purple-navy undertone rather than flat black, so gradients and
+     glows have somewhere to sit. */
+  --bg:#0A0A0F;
+  --bg-elevated:#100F17;
+  --surface:#15151F;
+  --surface-2:#1D1D2A;
+  --surface-3:#26263650;
 
-  /* TON's own brand blue as the accent — ties the UI to the chain
-     it's actually built on instead of a generic purple/indigo. */
-  --primary:#0098EA;
-  --primary-hover:#33ADEF;
-  --primary-press:#0077BD;
+  /* Gold is the primary accent — the whole "premium arena" identity
+     leans on it. Teal/pink/purple are secondary neons used sparingly
+     for variety (rank tiers, notifications, live indicators) rather
+     than competing with gold for primary attention. */
+  --gold:#E8B84B;
+  --gold-bright:#FFD873;
+  --gold-press:#C99A34;
+  --gold-glow:rgba(232,184,75,.35);
+
+  --teal:#00D9E8;
+  --pink:#FF3D71;
+  --purple:#9B59F5;
 
   --success:#22C55E;
   --warning:#F5B301;
-  --danger:#F23645;
+  --danger:#FF3D57;
 
-  --text:#F5F6F7;
-  --text-secondary:#9AA1AC;
-  --text-muted:#5B6169;
+  --text:#FFFFFF;
+  --text-secondary:#A8A8BC;
+  --text-muted:#6B6B80;
 
-  --border:#22262B;
-  --border-strong:#33383F;
+  --border:#2A2A3A;
+  --border-strong:#3C3C52;
+  --border-gold:rgba(232,184,75,.4);
 
-  --glass:rgba(255,255,255,.04);
+  --glass:rgba(255,255,255,.045);
 
-  --radius-sm:6px;
-  --radius-md:10px;
-  --radius-lg:14px;
-  --radius-xl:20px;
+  --radius-sm:8px;
+  --radius-md:14px;
+  --radius-lg:20px;
+  --radius-xl:28px;
 
-  --shadow-sm:0 1px 3px rgba(0,0,0,.4);
-  --shadow-md:0 4px 14px rgba(0,0,0,.5);
-  --shadow-lg:0 10px 28px rgba(0,0,0,.6);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.45);
+  --shadow-md:0 8px 24px rgba(0,0,0,.55);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.65);
+  --shadow-gold:0 0 0 1px var(--border-gold), 0 8px 32px var(--gold-glow);
 
+  --gradient-gold:linear-gradient(135deg,#F5CA6B 0%,#E8B84B 50%,#C99A34 100%);
+  --gradient-bg:radial-gradient(ellipse 120% 60% at 50% -10%, #1D1B2E 0%, var(--bg) 55%);
+
+  --font-display:"Orbitron","Inter",sans-serif;
   --font-sans:"Inter","Segoe UI",Roboto,sans-serif;
-  /* Used for anything numeric/hash-like — wallet addresses, TON
-     amounts, clocks — a mono accent on figures is a small, deliberate
-     detail that reads as "built for crypto" rather than a generic
-     template. */
   --font-mono:"JetBrains Mono","SF Mono",Consolas,monospace;
 
 }
@@ -65,11 +77,15 @@ html{
 
 body{
 
-    background:var(--bg);
+    background:var(--gradient-bg);
+
+    background-attachment:fixed;
 
     color:var(--text);
 
     overflow-x:hidden;
+
+    min-height:100vh;
 
 }
 
@@ -95,13 +111,15 @@ input{
     border:1px solid var(--border);
     border-radius:var(--radius-sm);
     color:var(--text);
-    padding:12px 14px;
+    padding:14px 16px;
+    transition:border-color .15s ease, box-shadow .15s ease;
 
 }
 
 input:focus{
 
-    border-color:var(--primary);
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px var(--gold-glow);
 
 }
 
@@ -153,6 +171,21 @@ img{
 
 }
 
+.display{
+
+    font-family:var(--font-display);
+
+}
+
+.gold-text{
+
+    background:var(--gradient-gold);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+
+}
+
 .glass{
 
     background:var(--glass);
@@ -171,18 +204,32 @@ img{
 
 }
 
+.slide-up{
+
+    animation:slideUp .4s cubic-bezier(.16,1,.3,1);
+
+}
+
 @keyframes fade{
 
-    from{
+    from{ opacity:0; }
 
-        opacity:0;
+    to{ opacity:1; }
 
-    }
+}
 
-    to{
+@keyframes slideUp{
 
-        opacity:1;
+    from{ opacity:0; transform:translateY(16px); }
 
-    }
+    to{ opacity:1; transform:translateY(0); }
+
+}
+
+@keyframes pulseGlow{
+
+    0%, 100%{ box-shadow:0 0 0 0 var(--gold-glow); }
+
+    50%{ box-shadow:0 0 0 8px transparent; }
 
 }

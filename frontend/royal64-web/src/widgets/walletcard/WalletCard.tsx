@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import "./WalletCard.scss";
 
 import { Card, Stack, Text, Button } from "@/shared/ui";
@@ -32,11 +34,15 @@ export function WalletCard({
 
                 </Text>
 
-                <Button>
+                <Link to="/wallet">
 
-                    Deposit
+                    <Button variant="secondary" style={{ width: "100%" }}>
 
-                </Button>
+                        View Wallet
+
+                    </Button>
+
+                </Link>
 
             </Stack>
 

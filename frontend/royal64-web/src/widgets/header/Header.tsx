@@ -6,15 +6,24 @@ export function Header() {
 
     const user = useAuthStore((s) => s.user);
 
+    const initial = user?.username ? user.username[0].toUpperCase() : "?";
+
     return (
         <header className="r64-header">
-            <div className="logo">
-                Royal64
+
+            <div className="r64-header-logo display">
+                ROYAL<span className="gold-text">64</span>
             </div>
 
-            <div className="user">
+            <div className="r64-header-user">
 
-                {user?.username ? `@${user.username}` : "Guest"}
+                <div className="r64-header-user-name">
+                    {user?.username ? `@${user.username}` : "Guest"}
+                </div>
+
+                <div className="r64-header-avatar">
+                    {initial}
+                </div>
 
             </div>
 

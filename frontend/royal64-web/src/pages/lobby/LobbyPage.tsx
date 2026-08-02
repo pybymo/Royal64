@@ -1,7 +1,9 @@
 import { useState } from "react";
 
-import { Button, Card, Stack, Text, Loader } from "@/shared/ui";
+import { Badge, Button, Card, Stack, Text, Loader } from "@/shared/ui";
 import { useLobby } from "@/features/lobby/useLobby";
+
+const STAKE_PRESETS = [1, 5, 10];
 
 export function LobbyPage() {
 
@@ -20,14 +22,43 @@ export function LobbyPage() {
 
     return (
 
-        <Stack gap={16}>
+        <Stack gap={20}>
+
+            <Text variant="h2" display>
+                Find a Match
+            </Text>
 
             <Card>
-                <Stack gap={12}>
+                <Stack gap={14}>
 
-                    <Text variant="h2">
-                        Create offer
+                    <Text variant="h3">
+                        Create Table
                     </Text>
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                        {STAKE_PRESETS.map((preset) => (
+                            <button
+                                key={preset}
+                                type="button"
+                                onClick={() => setStake(String(preset))}
+                                style={{
+                                    flex: 1,
+                                    padding: "10px 0",
+                                    borderRadius: "var(--radius-sm)",
+                                    background: Number(stake) === preset
+                                        ? "var(--gradient-gold)"
+                                        : "var(--surface-2)",
+                                    color: Number(stake) === preset
+                                        ? "#1A1305"
+                                        : "var(--text)",
+                                    fontWeight: 700,
+                                    fontSize: 14,
+                                }}
+                            >
+                                {preset} TON
+                            </button>
+                        ))}
+                    </div>
 
                     <input
                         type="number"
@@ -35,7 +66,7 @@ export function LobbyPage() {
                         step="0.1"
                         value={stake}
                         onChange={(e) => setStake(e.target.value)}
-                        placeholder="Stake (TON)"
+                        placeholder="Custom stake (TON)"
                     />
 
                     <input
@@ -56,52 +87,58 @@ export function LobbyPage() {
                             })
                         }
                     >
-                        {creating ? "Creating..." : "Create Offer"}
+                        {creating ? "Creating..." : "Create Table"}
                     </Button>
 
                 </Stack>
             </Card>
 
-            <Card>
-                <Stack gap={12}>
+            <Text variant="h3">
+                Open Tables
+            </Text>
 
-                    <Text variant="h2">
-                        Open offers
+            {loading && (
+                <Card>
+                    <Stack gap={8}>
+                        <Loader />
+                        <Text variant="small">Loading tables...</Text>
+                    </Stack>
+                </Card>
+            )}
+
+            {!loading && offers.length === 0 && (
+                <Card>
+                    <Text variant="small">
+                        No open tables right now — create one above.
                     </Text>
+                </Card>
+            )}
 
-                    {loading && (
-                        <Stack gap={8}>
-                            <Loader />
-                            <Text variant="small">Loading offers...</Text>
+            {offers.map((offer) => (
+
+                <Card key={offer.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+                        <Stack gap={6}>
+                            <Text variant="h3" mono>
+                                {offer.stake} TON
+                            </Text>
+                            <div style={{ display: "flex", gap: 6 }}>
+                                <Badge text={offer.match_type} />
+                                <Badge text={`${offer.time_control} min`} variant="muted" />
+                            </div>
                         </Stack>
-                    )}
 
-                    {!loading && offers.length === 0 && (
-                        <Text variant="small">
-                            No open offers right now — create one above.
-                        </Text>
-                    )}
+                        <Button
+                            disabled={accepting}
+                            onClick={() => acceptOffer(offer.id)}
+                        >
+                            {accepting ? "..." : "Join"}
+                        </Button>
 
-                    {offers.map((offer) => (
-
-                        <Card key={offer.id}>
-                            <Stack gap={8}>
-                                <Text variant="small" mono>
-                                    {offer.stake} TON · {offer.match_type} ·{" "}
-                                    {offer.time_control} min
-                                </Text>
-                                <Button
-                                    disabled={accepting}
-                                    onClick={() => acceptOffer(offer.id)}
-                                >
-                                    {accepting ? "Accepting..." : "Accept"}
-                                </Button>
-                            </Stack>
-                        </Card>
-                    ))}
-
-                </Stack>
-            </Card>
+                    </div>
+                </Card>
+            ))}
 
             {error && (
                 <Card>

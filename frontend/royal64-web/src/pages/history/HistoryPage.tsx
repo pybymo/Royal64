@@ -17,6 +17,13 @@ const OUTCOME_VARIANT: Record<string, "success" | "danger" | "muted" | "warning"
     PENDING: "warning",
 };
 
+const OUTCOME_BAR: Record<string, string> = {
+    WON: "var(--success)",
+    LOST: "var(--danger)",
+    DRAW: "var(--text-muted)",
+    PENDING: "var(--warning)",
+};
+
 export function HistoryPage() {
 
     const { data, isLoading, isError } = useQuery({
@@ -28,7 +35,7 @@ export function HistoryPage() {
 
         <Stack gap={16}>
 
-            <Text variant="h2">
+            <Text variant="h2" display>
                 History
             </Text>
 
@@ -59,19 +66,36 @@ export function HistoryPage() {
 
             {data?.map((match) => (
 
-                <Card key={match.id}>
-                    <Stack gap={6}>
-                        <Text variant="small">
-                            vs {match.opponent_username ? `@${match.opponent_username}` : "opponent"}
-                        </Text>
-                        <Text variant="small" mono>
-                            {match.amount} {match.currency}
-                        </Text>
+                <Card key={match.id} style={{ overflow: "hidden", position: "relative" }}>
+
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: 4,
+                            background: OUTCOME_BAR[match.outcome] ?? "var(--border-strong)",
+                        }}
+                    />
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingLeft: 10 }}>
+
+                        <Stack gap={6}>
+                            <Text variant="small">
+                                vs {match.opponent_username ? `@${match.opponent_username}` : "opponent"}
+                            </Text>
+                            <Text variant="h3" mono>
+                                {match.amount} {match.currency}
+                            </Text>
+                        </Stack>
+
                         <Badge
                             text={OUTCOME_LABEL[match.outcome] ?? match.outcome}
                             variant={OUTCOME_VARIANT[match.outcome] ?? "default"}
                         />
-                    </Stack>
+
+                    </div>
                 </Card>
             ))}
 

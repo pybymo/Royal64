@@ -78,20 +78,73 @@ export function GamePage() {
 
         <Stack gap={16}>
 
-            <Card>
-                <Stack gap={4}>
-                    <Text variant="small" mono>
-                        White: {formatClock(state.whiteTimeMs)}
-                    </Text>
-                    <Text variant="small" mono>
-                        Black: {formatClock(state.blackTimeMs)}
-                    </Text>
-                    <Text variant="small">
-                        Turn: {state.turn}
-                        {!connected && "  ·  reconnecting..."}
-                    </Text>
-                </Stack>
-            </Card>
+            <Text variant="h2" display>
+                Game Room
+            </Text>
+
+            <div style={{ display: "flex", gap: 12 }}>
+
+                <div
+                    style={{
+                        flex: 1,
+                        background: state.turn === "black" ? "var(--gradient-gold)" : "var(--surface)",
+                        border: state.turn === "black" ? "none" : "1px solid var(--border)",
+                        borderRadius: "var(--radius-md)",
+                        padding: "14px 16px",
+                        textAlign: "center",
+                    }}
+                >
+                    <div style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: state.turn === "black" ? "#3A2C0A" : "var(--text-muted)",
+                        textTransform: "uppercase",
+                        letterSpacing: ".05em",
+                    }}>
+                        Black
+                    </div>
+                    <div className="mono" style={{
+                        fontSize: 24,
+                        fontWeight: 800,
+                        color: state.turn === "black" ? "#1A1305" : "var(--text)",
+                    }}>
+                        {formatClock(state.blackTimeMs)}
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        flex: 1,
+                        background: state.turn === "white" ? "var(--gradient-gold)" : "var(--surface)",
+                        border: state.turn === "white" ? "none" : "1px solid var(--border)",
+                        borderRadius: "var(--radius-md)",
+                        padding: "14px 16px",
+                        textAlign: "center",
+                    }}
+                >
+                    <div style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: state.turn === "white" ? "#3A2C0A" : "var(--text-muted)",
+                        textTransform: "uppercase",
+                        letterSpacing: ".05em",
+                    }}>
+                        White
+                    </div>
+                    <div className="mono" style={{
+                        fontSize: 24,
+                        fontWeight: 800,
+                        color: state.turn === "white" ? "#1A1305" : "var(--text)",
+                    }}>
+                        {formatClock(state.whiteTimeMs)}
+                    </div>
+                </div>
+
+            </div>
+
+            {!connected && (
+                <Text variant="small">Reconnecting...</Text>
+            )}
 
             {opponentDisconnect && (
                 <Card>
