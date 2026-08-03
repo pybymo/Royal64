@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.dependencies import get_current_user
@@ -9,9 +10,19 @@ from database.models.user import User
 from database.session import get_session
 from schemas.match import MatchOut
 from schemas.offer import OfferCreate, OfferOut
+from services.bot_opponent import BotOpponentService
 from services.offer_service import OfferService
 
 router = APIRouter(prefix="/offers", tags=["offers"])
+
+
+class BotGameRequest(BaseModel):
+    time_control: int = 5
+
+
+class BotGameResponse(BaseModel):
+    match_id: UUID
+    game_id: UUID
 
 
 @router.get("", response_model=list[OfferOut])
@@ -36,6 +47,25 @@ async def create_offer(
 
     except PlayerWalletNotVerifiedError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post("/bot", response_model=BotGameResponse)
+async def start_bot_game(
+    body: BotGameRequest,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """
+    Instant free game against the house bot — no offer to wait on, no
+    wallet required. Exists specifically so the lobby is never a dead
+    end when no human opponent is around.
+    """
+
+    service = BotOpponentService(session)
+
+    match, game = await service.start_bot_game(user, body.time_control)
+
+    return BotGameResponse(match_id=match.id, game_id=game.id)
 
 
 @router.post("/{offer_id}/accept", response_model=MatchOut)

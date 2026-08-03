@@ -30,6 +30,11 @@ export interface MatchOut {
     created_at: string;
 }
 
+export interface BotGameResult {
+    match_id: string;
+    game_id: string;
+}
+
 export async function listOffers(): Promise<Offer[]> {
     return api<Offer[]>("/offers");
 }
@@ -44,5 +49,12 @@ export async function createOffer(input: CreateOfferInput): Promise<Offer> {
 export async function acceptOffer(offerId: string): Promise<MatchOut> {
     return api<MatchOut>(`/offers/${offerId}/accept`, {
         method: "POST",
+    });
+}
+
+export async function startBotGame(timeControl: number): Promise<BotGameResult> {
+    return api<BotGameResult>("/offers/bot", {
+        method: "POST",
+        body: JSON.stringify({ time_control: timeControl }),
     });
 }

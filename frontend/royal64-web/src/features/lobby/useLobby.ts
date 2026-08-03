@@ -6,6 +6,7 @@ import {
     acceptOffer,
     createOffer,
     listOffers,
+    startBotGame,
     type CreateOfferInput,
 } from "./lobby-service";
 import { getCurrentGame } from "@/features/game/game-service";
@@ -44,6 +45,15 @@ export function useLobby() {
         onError: (err: Error) => setError(err.message),
     });
 
+    const playBot = useMutation({
+        mutationFn: (timeControl: number) => startBotGame(timeControl),
+        onSuccess: (result) => {
+            setError(null);
+            navigate(`/game/${result.game_id}`);
+        },
+        onError: (err: Error) => setError(err.message),
+    });
+
     return {
         offers: offers.data ?? [],
         loading: offers.isLoading,
@@ -52,5 +62,7 @@ export function useLobby() {
         creating: create.isPending,
         acceptOffer: accept.mutate,
         accepting: accept.isPending,
+        playBot: playBot.mutate,
+        startingBot: playBot.isPending,
     };
 }

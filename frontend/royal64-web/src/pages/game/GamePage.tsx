@@ -25,7 +25,7 @@ export function GamePage() {
     const navigate = useNavigate();
 
     const { state, myColor, gameOver, nextGame, opponentDisconnect, error, connected, sendMove, resign } =
-        useGameSocket(gameId!);
+        useGameSocket(gameId);
 
     const boardTheme = useBoardThemeStore((s) => s.theme);
     const setBoardTheme = useBoardThemeStore((s) => s.setTheme);

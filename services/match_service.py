@@ -29,7 +29,7 @@ class MatchService:
             white_player_id=offer.owner_id,
             black_player_id=accepter.id,
             amount=offer.stake,
-            currency="TON",
+            currency=offer.currency,
             games_required=GAMES_REQUIRED.get(offer.match_type, 1),
             time_control_minutes=offer.time_control,
             status=MatchStatus.ACTIVE,

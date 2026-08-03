@@ -26,7 +26,10 @@ interface OpponentDisconnectInfo {
     graceSeconds: number;
 }
 
-export function useGameSocket(gameId: string) {
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY_MS = 1500;
+
+export function useGameSocket(gameId: string | undefined) {
 
     const token = useSessionStore((s) => s.session?.accessToken);
 
@@ -40,69 +43,131 @@ export function useGameSocket(gameId: string) {
     const [connected, setConnected] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
+    const reconnectAttempt = useRef(0);
+    const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const gotStateRef = useRef(false);
+    const finishedRef = useRef(false);
 
     useEffect(() => {
 
-        if (!token) {
+        // gameId can be transiently undefined for a render or two right
+        // after a route change (e.g. navigating here from accepting an
+        // offer, or the Bo3 auto-advance to the next game) — connecting
+        // with a bad URL then never retrying was very likely why the
+        // game screen sometimes silently failed to load, requiring a
+        // manual navigate-away-and-back to get a fresh mount.
+        if (!token || !gameId) {
             return;
         }
 
-        const ws = new WebSocket(gameSocketUrl(gameId, token));
-        wsRef.current = ws;
+        let cancelled = false;
 
-        ws.onopen = () => setConnected(true);
+        function connect() {
 
-        ws.onclose = () => setConnected(false);
+            if (cancelled) {
+                return;
+            }
 
-        ws.onerror = () => setError("Connection error");
+            const ws = new WebSocket(gameSocketUrl(gameId!, token!));
+            wsRef.current = ws;
 
-        ws.onmessage = (event) => {
+            ws.onopen = () => {
+                setConnected(true);
+                reconnectAttempt.current = 0;
+            };
 
-            const msg = JSON.parse(event.data);
+            ws.onclose = () => {
 
-            if (msg.type === "you") {
+                setConnected(false);
 
-                setMyColor(msg.color);
-
-            } else if (msg.type === "state") {
-
-                setState({
-                    fen: msg.fen,
-                    turn: msg.turn,
-                    whiteTimeMs: msg.white_time_ms,
-                    blackTimeMs: msg.black_time_ms,
-                    lastMove: msg.last_move,
-                });
-
-            } else if (msg.type === "game_over") {
-
-                setGameOver({ result: msg.result, reason: msg.reason });
-
-            } else if (msg.type === "next_game") {
-
-                setNextGame({ gameId: msg.game_id, gameNumber: msg.game_number });
-
-            } else if (msg.type === "disconnected") {
-
-                if (!msg.final) {
-                    setOpponentDisconnect({
-                        color: msg.color,
-                        graceSeconds: msg.grace_seconds,
-                    });
+                if (cancelled || finishedRef.current) {
+                    return;
                 }
 
-            } else if (msg.type === "reconnected") {
+                if (reconnectAttempt.current >= MAX_RECONNECT_ATTEMPTS) {
+                    setError(
+                        "Lost connection to the game and couldn't reconnect. " +
+                        "Try leaving and reopening it."
+                    );
+                    return;
+                }
 
-                setOpponentDisconnect(null);
+                reconnectAttempt.current += 1;
 
-            } else if (msg.type === "error") {
+                reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY_MS);
+            };
 
-                setError(msg.message);
-            }
-        };
+            ws.onerror = () => {
+                // onclose fires right after this and drives the actual
+                // reconnect — this only sets a transient message so a
+                // one-off blip doesn't get reported as fatal before the
+                // retry has even had a chance to run.
+                if (!gotStateRef.current) {
+                    setError("Connecting...");
+                }
+            };
+
+            ws.onmessage = (event) => {
+
+                const msg = JSON.parse(event.data);
+
+                if (msg.type === "you") {
+
+                    setMyColor(msg.color);
+
+                } else if (msg.type === "state") {
+
+                    gotStateRef.current = true;
+                    setError(null);
+
+                    setState({
+                        fen: msg.fen,
+                        turn: msg.turn,
+                        whiteTimeMs: msg.white_time_ms,
+                        blackTimeMs: msg.black_time_ms,
+                        lastMove: msg.last_move,
+                    });
+
+                } else if (msg.type === "game_over") {
+
+                    finishedRef.current = true;
+                    setGameOver({ result: msg.result, reason: msg.reason });
+
+                } else if (msg.type === "next_game") {
+
+                    finishedRef.current = true;
+                    setNextGame({ gameId: msg.game_id, gameNumber: msg.game_number });
+
+                } else if (msg.type === "disconnected") {
+
+                    if (!msg.final) {
+                        setOpponentDisconnect({
+                            color: msg.color,
+                            graceSeconds: msg.grace_seconds,
+                        });
+                    }
+
+                } else if (msg.type === "reconnected") {
+
+                    setOpponentDisconnect(null);
+
+                } else if (msg.type === "error") {
+
+                    setError(msg.message);
+                }
+            };
+        }
+
+        connect();
 
         return () => {
-            ws.close();
+            cancelled = true;
+
+            if (reconnectTimer.current) {
+                clearTimeout(reconnectTimer.current);
+            }
+
+            wsRef.current?.close();
             wsRef.current = null;
         };
 

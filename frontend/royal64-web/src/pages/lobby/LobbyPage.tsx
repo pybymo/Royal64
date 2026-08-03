@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Badge, Button, Card, Stack, Text, Loader } from "@/shared/ui";
 import { useLobby } from "@/features/lobby/useLobby";
 
-const STAKE_PRESETS = [1, 5, 10];
+const STAKE_PRESETS = [0, 1, 5, 10];
 
 export function LobbyPage() {
 
@@ -15,6 +15,8 @@ export function LobbyPage() {
         creating,
         acceptOffer,
         accepting,
+        playBot,
+        startingBot,
     } = useLobby();
 
     const [stake, setStake] = useState("1");
@@ -27,6 +29,39 @@ export function LobbyPage() {
             <Text variant="h2" display>
                 Find a Match
             </Text>
+
+            <Card
+                style={{
+                    background: "var(--gradient-gold)",
+                    boxShadow: "var(--shadow-gold)",
+                }}
+            >
+                <Stack gap={10}>
+                    <div style={{ color: "#1A1305", fontWeight: 800, fontSize: 17 }}>
+                        No one around right now?
+                    </div>
+                    <div style={{ color: "#3A2C0A", fontSize: 13 }}>
+                        Play a free practice game against the house bot —
+                        instant start, no wallet needed.
+                    </div>
+                    <button
+                        type="button"
+                        disabled={startingBot}
+                        onClick={() => playBot(Number(timeControl) || 5)}
+                        style={{
+                            marginTop: 4,
+                            padding: "12px 0",
+                            borderRadius: "var(--radius-md)",
+                            background: "#1A1305",
+                            color: "var(--gold-bright)",
+                            fontWeight: 700,
+                            fontSize: 14,
+                        }}
+                    >
+                        {startingBot ? "Starting..." : "▶ Play vs Bot"}
+                    </button>
+                </Stack>
+            </Card>
 
             <Card>
                 <Stack gap={14}>
@@ -55,18 +90,18 @@ export function LobbyPage() {
                                     fontSize: 14,
                                 }}
                             >
-                                {preset} TON
+                                {preset === 0 ? "Free" : `${preset} TON`}
                             </button>
                         ))}
                     </div>
 
                     <input
                         type="number"
-                        min="0.1"
+                        min="0"
                         step="0.1"
                         value={stake}
                         onChange={(e) => setStake(e.target.value)}
-                        placeholder="Custom stake (TON)"
+                        placeholder="Custom stake (TON, 0 = free)"
                     />
 
                     <input
@@ -87,7 +122,7 @@ export function LobbyPage() {
                             })
                         }
                     >
-                        {creating ? "Creating..." : "Create Table"}
+                        {creating ? "Creating..." : Number(stake) === 0 ? "Create Free Table" : "Create Table"}
                     </Button>
 
                 </Stack>
@@ -109,7 +144,7 @@ export function LobbyPage() {
             {!loading && offers.length === 0 && (
                 <Card>
                     <Text variant="small">
-                        No open tables right now — create one above.
+                        No open tables right now — create one above, or play the bot while you wait.
                     </Text>
                 </Card>
             )}
@@ -121,7 +156,7 @@ export function LobbyPage() {
 
                         <Stack gap={6}>
                             <Text variant="h3" mono>
-                                {offer.stake} TON
+                                {offer.stake === 0 ? "Free" : `${offer.stake} TON`}
                             </Text>
                             <div style={{ display: "flex", gap: 6 }}>
                                 <Badge text={offer.match_type} />

@@ -21,14 +21,20 @@ class MatchOffer(Base, UUIDMixin, TimestampMixin):
         nullable=False,
     )
 
-    wallet_id: Mapped[str] = mapped_column(
+    wallet_id: Mapped[str | None] = mapped_column(
         ForeignKey("wallets.id"),
-        nullable=False,
+        nullable=True,
     )
 
     stake: Mapped[float] = mapped_column(
         Float,
         nullable=False,
+    )
+
+    currency: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False,
+        default="TON",
     )
 
     match_type: Mapped[MatchType] = mapped_column(

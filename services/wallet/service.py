@@ -138,8 +138,25 @@ class WalletService:
         allowed = _NETWORK_IDS.get(settings.TON_NETWORK, set())
 
         if network not in allowed:
+
+            if settings.TON_NETWORK == "testnet" and network == "-239":
+                raise ProofDomainMismatchError(
+                    "That's a mainnet wallet with real funds, but this app is "
+                    "running on TON testnet right now. Switch TON Keeper to "
+                    "testnet mode and connect a testnet wallet instead — "
+                    "don't use a real-funds wallet against an unaudited "
+                    "test contract."
+                )
+
+            if settings.TON_NETWORK == "mainnet" and network in ("-1", "-3"):
+                raise ProofDomainMismatchError(
+                    "That's a testnet wallet, but this app expects a mainnet "
+                    "TON wallet. Switch TON Keeper out of testnet mode."
+                )
+
             raise ProofDomainMismatchError(
-                f"unexpected network {network!r} for TON_NETWORK={settings.TON_NETWORK!r}"
+                f"Unexpected wallet network ({network}) for this app's "
+                f"configuration ({settings.TON_NETWORK})."
             )
 
     def _check_domain(self, domain_value: str, length_bytes: int) -> None:
@@ -195,9 +212,15 @@ class WalletService:
             raise TonApiUnavailableError(f"TonAPI request failed: {exc}") from exc
 
         if response.status_code == 404:
+            faucet_hint = (
+                " On testnet, get some test TON from @testgiver_ton_bot on "
+                "Telegram — receiving that deploys the wallet."
+                if settings.TON_NETWORK == "testnet"
+                else ""
+            )
             raise WalletNotDeployedError(
-                "wallet is not deployed on-chain yet — send or receive at least "
-                "one transaction before connecting it"
+                "This wallet has no on-chain activity yet — send or receive "
+                "at least one transaction before connecting it." + faucet_hint
             )
 
         if response.status_code != 200:

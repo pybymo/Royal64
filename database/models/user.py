@@ -107,6 +107,12 @@ class User(Base, UUIDMixin, TimestampMixin):
         nullable=False,
     )
 
+    is_bot: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
     last_seen: Mapped[str | None] = mapped_column(
         String(64),
         nullable=True,

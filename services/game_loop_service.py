@@ -260,20 +260,86 @@ class GameLoop:
         now = datetime.now(UTC)
         elapsed_ms = int((now - state.last_move_at.replace(tzinfo=UTC)).total_seconds() * 1000)
 
-        remaining = state.white_time if self.color == "white" else state.black_time
+        game_over = await self._process_move(
+            color=self.color,
+            mover_id=self.user.id,
+            uci=uci,
+            elapsed_ms=elapsed_ms,
+        )
+
+        if not game_over:
+            await self._maybe_play_bot_move()
+
+    async def _maybe_play_bot_move(self) -> None:
+        """
+        If the opponent in this game is the house bot, plays its reply
+        immediately after the human's move — there's no websocket
+        connection on the bot's side to wait on. Uses a shallow
+        Stockfish search (fast, deliberately beatable — this is a
+        practice/calibration opponent, not a challenge) and a fixed
+        simulated thinking time rather than real elapsed time, since
+        there's no real round-trip to measure.
+        """
+
+        state = game_sessions.get(self.game.id)
+
+        if state is None or state.finished:
+            return
+
+        bot_color = "black" if self.color == "white" else "white"
+        bot_id = self.game.black_player_id if bot_color == "black" else self.game.white_player_id
+
+        opponent = await UserRepository(self.db).get_by_id(bot_id)
+
+        if opponent is None or not opponent.is_bot:
+            return
+
+        engine = await asyncio.to_thread(EngineService)
+
+        try:
+            uci = await asyncio.to_thread(engine.best_move, state.current_fen, 8)
+
+        finally:
+            await asyncio.to_thread(engine.close)
+
+        await self._process_move(
+            color=bot_color,
+            mover_id=bot_id,
+            uci=uci,
+            elapsed_ms=900,
+        )
+
+    async def _process_move(
+        self,
+        *,
+        color: str,
+        mover_id,
+        uci: str,
+        elapsed_ms: int,
+    ) -> bool:
+        """
+        Shared by both the human path and the bot's auto-move — applies
+        one move, persists it, deducts the mover's clock, broadcasts
+        the new state, and ends the game if it's over. Returns True if
+        the game ended as a result of this move.
+        """
+
+        state = _ensure_session(self.game)
+
+        remaining = state.white_time if color == "white" else state.black_time
         remaining_ms = remaining * 1000 - elapsed_ms
 
         if remaining_ms <= 0:
             await self._finish(
-                winner="BLACK" if self.color == "white" else "WHITE",
+                winner="BLACK" if color == "white" else "WHITE",
                 reason="timeout",
             )
-            return
+            return True
 
         try:
             result = await self.move_service.play(
                 self.game,
-                self.user.id,
+                mover_id,
                 state.move_number + 1,
                 state.current_fen,
                 uci,
@@ -283,8 +349,7 @@ class GameLoop:
         except ValueError as exc:
             raise GameLoopError(str(exc)) from exc
 
-        # Deduct the mover's clock, persist, advance turn.
-        if self.color == "white":
+        if color == "white":
             state.white_time = max(0, remaining_ms) // 1000
         else:
             state.black_time = max(0, remaining_ms) // 1000
@@ -314,6 +379,10 @@ class GameLoop:
                 winner=winner_value if winner_value != "NONE" else "DRAW",
                 reason="checkmate" if result["checkmate"] else "game_over",
             )
+
+            return True
+
+        return False
 
     async def _handle_resign(self) -> None:
 
@@ -412,6 +481,10 @@ class GameLoop:
             winner_id = None
 
         await self.match_repo.save(match)
+
+        # Free games have no escrow at all — nothing to resolve.
+        if match.amount == 0:
+            return
 
         winner_address = None
 
