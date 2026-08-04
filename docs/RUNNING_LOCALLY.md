@@ -133,48 +133,73 @@ changed to make this solvable instead of a dead end:
    Point the `ngrok http` tunnel at the `preview` port instead of the
    dev server's port, and update `WEBAPP_URL` accordingly.
 
-### If sign-in shows "Load failed" (or "Failed to fetch")
+### If sign-in (or any request) shows "Load failed" / "Failed to fetch"
 
 This is the browser's own generic message for a network-level request
 failure — Safari/WebKit literally says just "Load failed" with no
-detail, which reads like the app broke rather than "couldn't reach the
-API". As of this pass, that raw message is replaced with a clearer one
-telling you the exact URL it tried and reminding you what to check —
-and the login screen now shows `API_URL:` directly under any sign-in
-error, so you can see exactly what the app is configured to hit.
-Checklist, in order:
+detail. As of this pass, the app distinguishes two different things
+that both produce this same browser message, and tells you which one
+it actually is:
 
-1. **`frontend/royal64-web/.env` — `VITE_API_URL`** must be the
-   backend's ngrok URL, `https://...`, not `http://127.0.0.1:8000`.
-   From a phone, `127.0.0.1` means the phone itself — there's nothing
-   listening there.
-2. **You must rebuild after changing it.** `VITE_API_URL` is baked
-   into the bundle at build time, not read at runtime — `pnpm build`
-   again (or restart `pnpm dev`) after any `.env` change here.
-3. **Backend `.env` — `CORS_ORIGINS`** must include the frontend's
-   exact ngrok origin (`https://<frontend-ngrok-domain>`, no trailing
-   slash, no path). The default only allows `localhost:5173`.
-4. **Both URLs must be `https://`.** A `https://` frontend calling a
-   plain `http://` backend gets blocked as mixed content, which can
-   also surface as this same generic failure.
-5. Restart the backend after changing `CORS_ORIGINS` — it's read once
-   at startup.
+- **"blocked by CORS"** — the backend IS reachable, but its response
+  didn't allow this app's origin. Fix: `CORS_ORIGINS` on the backend,
+  then restart it (it's read once at startup).
+- **"could not reach at all"** — nothing answered at that URL at all.
+  Fix: `VITE_API_URL` on the frontend, then rebuild (it's baked in at
+  build time, not read at runtime).
 
-### If it's still slow/broken after those fixes, check next
+It tells the difference by trying a `no-cors` request first — that
+kind of request succeeds as long as *something* is listening, even if
+a normal request to it would be CORS-blocked, so it pins down which
+case you're actually in instead of guessing.
 
-- **ngrok's free-tier browser warning page**: by default ngrok shows
-  an interstitial "visit site" page to browser requests instead of
-  proxying them, which looks exactly like a broken/hanging backend.
-  `shared/api/http.ts` now sends the `ngrok-skip-browser-warning`
-  header on every API call to bypass this — but this can't be done for
-  the **WebSocket** connection (`/ws/game/{id}`) from browser JS, since
-  browsers don't allow custom headers on a WS handshake. If the game
-  websocket specifically hangs through ngrok, that's why — a paid ngrok
-  plan or an alternative tunnel (e.g. Cloudflare Tunnel) avoids the
-  interstitial entirely.
+**CORS is now handled automatically for tunnel domains.** `CORS_ORIGINS`
+no longer needs to be updated by hand for Cloudflare quick tunnels or
+ngrok — the backend allows any `*.trycloudflare.com` / `*.ngrok-free.app`
+/ `*.ngrok.io` origin automatically. `CORS_ORIGINS` still matters for a
+real domain later, but for tunnel-based testing it should no longer be
+the thing that breaks.
+
+**What's left to keep in sync, every single tunnel restart** — this is
+the part that's easy to miss, because *both* Cloudflare's quick
+tunnels and ngrok's free tier hand out a brand new random subdomain
+every time you restart them. Nothing on this list is optional if the
+tunnel URL changed:
+
+1. `frontend/royal64-web/.env` → `VITE_API_URL` = the **current**
+   backend tunnel URL → **rebuild** (`pnpm build`, or restart
+   `pnpm dev`).
+2. `.env` (backend) → `WEBAPP_URL` = the **current** frontend tunnel
+   URL → **restart `bot/main.py`** (it sets the Mini App menu button
+   once, at startup — an old URL there means the bot keeps launching a
+   dead link even after everything else is fixed).
+3. Both URLs must be `https://` — a `https://` frontend calling a
+   plain `http://` backend is blocked as mixed content, which can also
+   surface as this same generic failure.
+
+If you changed the tunnel and only did some of the above, you'll get
+inconsistent, hard-to-pin-down failures that look like they come and
+go for no reason — because different parts of the app are pointing at
+different, no-longer-matching URLs at the same time.
+
+### If it's still slow/broken after that
+
+- **Cloudflare's free quick tunnels (`cloudflared tunnel --url ...`)
+  are explicitly not meant for reliability** — Cloudflare's own docs
+  describe them as best-effort with no uptime guarantee. If requests
+  fail intermittently with everything above correctly configured, this
+  may just be the tunnel itself, not the app. A **named** Cloudflare
+  tunnel (free Cloudflare account, stable hostname, doesn't change on
+  restart) is more reliable if this keeps happening — worth setting up
+  once rather than continuing to fight the quick-tunnel version.
+- **ngrok's free-tier browser warning page**: if using ngrok instead,
+  it shows an interstitial "visit site" page to browser requests
+  instead of proxying them. `shared/api/http.ts` sends the
+  `ngrok-skip-browser-warning` header on every API call to bypass this
+  — but this can't be done for the **WebSocket** connection
+  (`/ws/game/{id}`) from browser JS, since browsers don't allow custom
+  headers on a WS handshake. If the game websocket specifically hangs
+  through ngrok, that's why.
 - **Bundle load time over a phone's mobile connection through a
   tunnel** can itself take a while — the manualChunks split in
   `vite.config.ts` helps, but a slow tunnel is still a slow tunnel.
-- **Stale `WEBAPP_URL`**: if you change the ngrok URL (it changes every
-  time you restart ngrok on the free tier), the bot's menu button still
-  points at the *old* URL until `bot/main.py` is restarted.

@@ -2,129 +2,75 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from launcher.utils import ROOT, ok
-
-
-BACKEND_ENV = ROOT / ".env"
-
-FRONTEND_ENV = (
-    ROOT
-    / "frontend"
-    / "royal64-web"
-    / ".env"
-)
+from launcher.launcher_config import BACKEND_ENV_FILE, FRONTEND_ENV_FILE
+from launcher.logger import success
 
 
 class EnvManager:
 
+    # ==================================================
+
     @staticmethod
-    def _replace_or_add(path: Path, key: str, value: str):
+    def _update(path: Path, values: dict[str, str]) -> None:
 
-        if not path.exists():
-            path.write_text("")
+        lines: list[str] = []
 
-        lines = path.read_text(
-            encoding="utf-8"
-        ).splitlines()
+        if path.exists():
+            lines = path.read_text(
+                encoding="utf-8",
+            ).splitlines()
 
-        found = False
-
-        new_lines = []
+        data: dict[str, str] = {}
 
         for line in lines:
 
-            if line.startswith(f"{key}="):
+            if "=" not in line:
+                continue
 
-                new_lines.append(f"{key}={value}")
+            k, v = line.split("=", 1)
 
-                found = True
+            data[k.strip()] = v.strip()
 
-            else:
+        data.update(values)
 
-                new_lines.append(line)
-
-        if not found:
-            new_lines.append(f"{key}={value}")
+        text = "\n".join(
+            f"{k}={v}"
+            for k, v in sorted(data.items())
+        )
 
         path.write_text(
-            "\n".join(new_lines),
+            text + "\n",
             encoding="utf-8",
         )
 
-    # --------------------------------------------------
+        success(f"{path.name} updated")
 
-    @classmethod
-    def update_backend(
-        cls,
-        frontend_url: str,
-    ):
-
-        cls._replace_or_add(
-            BACKEND_ENV,
-            "WEBAPP_URL",
-            frontend_url,
-        )
-
-        # ----------
-
-        if BACKEND_ENV.exists():
-
-            text = BACKEND_ENV.read_text(
-                encoding="utf-8"
-            )
-
-            key = "CORS_ORIGINS="
-
-            if key in text:
-
-                lines = text.splitlines()
-
-                out = []
-
-                for line in lines:
-
-                    if line.startswith(key):
-
-                        origins = (
-                            line[len(key):]
-                            .split(",")
-                        )
-
-                        origins = [
-                            x.strip()
-                            for x in origins
-                            if x.strip()
-                        ]
-
-                        if frontend_url not in origins:
-                            origins.append(frontend_url)
-
-                        out.append(
-                            key + ",".join(origins)
-                        )
-
-                    else:
-                        out.append(line)
-
-                BACKEND_ENV.write_text(
-                    "\n".join(out),
-                    encoding="utf-8",
-                )
-
-        ok(".env updated")
-
-    # --------------------------------------------------
+    # ==================================================
 
     @classmethod
     def update_frontend(
         cls,
         backend_url: str,
-    ):
+    ) -> None:
 
-        cls._replace_or_add(
-            FRONTEND_ENV,
-            "VITE_API_URL",
-            backend_url,
+        cls._update(
+            FRONTEND_ENV_FILE,
+            {
+                "VITE_API_URL": backend_url,
+            },
         )
 
-        ok("frontend/.env updated")
+    # ==================================================
+
+    @classmethod
+    def update_backend(
+        cls,
+        frontend_url: str,
+    ) -> None:
+
+        cls._update(
+            BACKEND_ENV_FILE,
+            {
+                "FRONTEND_URL": frontend_url,
+            },
+        )

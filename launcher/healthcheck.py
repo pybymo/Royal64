@@ -1,7 +1,18 @@
 from __future__ import annotations
 
+import socket
+import time
+
 import requests
-from launcher.utils import ok, fail
+
+from launcher.launcher_config import (
+    BACKEND_HOST,
+    BACKEND_PORT,
+    FRONTEND_HOST,
+    FRONTEND_PORT,
+    HEALTH_ENDPOINT,
+)
+from launcher.logger import failure, info, success
 
 
 class HealthCheck:
@@ -10,96 +21,117 @@ class HealthCheck:
         self,
         backend_url: str,
         frontend_url: str,
-    ):
+    ) -> None:
 
-        self.backend = backend_url.rstrip("/")
-        self.frontend = frontend_url.rstrip("/")
+        self.backend_url = backend_url.rstrip("/")
+        self.frontend_url = frontend_url.rstrip("/")
 
-    # -------------------------------------------------------
+    # ==================================================
 
-    def check_backend(self):
+    @staticmethod
+    def _tcp(
+        host: str,
+        port: int,
+        timeout: float = 2,
+    ) -> bool:
+
+        try:
+            with socket.create_connection(
+                (host, port),
+                timeout=timeout,
+            ):
+                return True
+        except Exception:
+            return False
+
+    # ==================================================
+
+    @staticmethod
+    def _http(
+        url: str,
+        timeout: float = 5,
+    ) -> bool:
 
         try:
 
             r = requests.get(
-                f"{self.backend}/docs",
-                timeout=10,
+                url,
+                timeout=timeout,
             )
 
-            if r.status_code == 200:
-                ok("Backend Docs")
-                return True
+            return r.status_code == 200
 
-        except Exception as e:
+        except Exception:
+            return False
 
-            fail(f"Backend Docs -> {e}")
+    # ==================================================
 
-        return False
+    def check_backend(self) -> bool:
 
-    # -------------------------------------------------------
+        info("Checking Backend...")
 
-    def check_openapi(self):
+        if not self._tcp(
+            BACKEND_HOST,
+            BACKEND_PORT,
+        ):
 
-        try:
+            failure("Backend TCP failed")
+            return False
 
-            r = requests.get(
-                f"{self.backend}/openapi.json",
-                timeout=10,
-            )
+        if not self._http(
+            f"{self.backend_url}{HEALTH_ENDPOINT}",
+        ):
 
-            if r.status_code == 200:
-                ok("OpenAPI")
-                return True
+            failure("Backend HTTP failed")
+            return False
 
-        except Exception as e:
+        success("Backend OK")
 
-            fail(f"OpenAPI -> {e}")
+        return True
 
-        return False
+    # ==================================================
 
-    # -------------------------------------------------------
+    def check_frontend(self) -> bool:
 
-    def check_frontend(self):
+        info("Checking Frontend...")
 
-        try:
+        if not self._tcp(
+            FRONTEND_HOST,
+            FRONTEND_PORT,
+        ):
 
-            r = requests.get(
-                self.frontend,
-                timeout=10,
-            )
+            failure("Frontend TCP failed")
+            return False
 
-            if r.status_code == 200:
-                ok("Frontend")
-                return True
+        if not self._http(
+            self.frontend_url,
+        ):
 
-        except Exception as e:
+            failure("Frontend HTTP failed")
+            return False
 
-            fail(f"Frontend -> {e}")
+        success("Frontend OK")
 
-        return False
+        return True
 
-    # -------------------------------------------------------
+    # ==================================================
 
-    def check_all(self):
+    def check_all(self) -> bool:
+
+        start = time.perf_counter()
+
+        backend = self.check_backend()
+        frontend = self.check_frontend()
+
+        elapsed = time.perf_counter() - start
 
         print()
+        print("=" * 60)
+        print("Health Summary")
+        print("=" * 60)
+        print(f"Backend : {'OK' if backend else 'FAIL'}")
+        print(f"Frontend: {'OK' if frontend else 'FAIL'}")
+        print(f"Elapsed : {elapsed:.2f}s")
+        print("=" * 60)
 
-        print("=========== HEALTH CHECK ===========")
-
-        b1 = self.check_backend()
-
-        b2 = self.check_openapi()
-
-        f = self.check_frontend()
-
-        print()
-
-        if b1 and b2 and f:
-
-            print("🟢 Royal64 Ready")
-
-            return True
-
-        print("🔴 Health Check Failed")
-
-        return False
+        return backend and frontend

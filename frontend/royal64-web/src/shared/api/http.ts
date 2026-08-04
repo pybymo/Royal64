@@ -56,16 +56,30 @@ export async function api<T>(
         // A network-level failure (DNS, connection refused, CORS
         // preflight rejected, mixed content) throws a TypeError here
         // with an unhelpful, browser-specific message — WebKit/Safari
-        // literally says "Load failed" with zero detail, which reads
-        // like the app itself broke rather than "can't reach the API".
-        // API_URL is baked in at build time from VITE_API_URL — this
-        // is almost always that value being wrong/unreachable, or the
-        // backend's CORS_ORIGINS not including this exact origin.
+        // literally says "Load failed" with zero detail. The Fetch API
+        // deliberately can't tell "server is down" apart from "CORS is
+        // blocking a server that's actually fine" on a normal request
+        // (that's a security property, not a gap) — so a no-cors probe
+        // is used to find out which one this actually is instead of
+        // guessing in the error message.
+        const reachable = await probeReachable();
+
+        if (reachable) {
+            throw new Error(
+                `The backend at ${API_URL} is reachable, but this request was ` +
+                `blocked by CORS — the response didn't include this app's ` +
+                `origin (${window.location.origin}) in its allowed origins. ` +
+                `Check the backend's CORS_ORIGINS setting and that it was ` +
+                `restarted after any change to it. ` +
+                `Original error: ${err instanceof Error ? err.message : String(err)}`
+            );
+        }
+
         throw new Error(
-            `Could not reach the backend at ${API_URL}${url}. ` +
-            `Check that VITE_API_URL points to a reachable, HTTPS backend ` +
-            `URL and that the backend's CORS_ORIGINS includes this app's ` +
-            `origin (${window.location.origin}). ` +
+            `Could not reach the backend at all at ${API_URL}${url} — this is a ` +
+            `network-level failure, not CORS (confirmed via a no-cors probe). ` +
+            `Check VITE_API_URL is the CURRENT tunnel URL (these regenerate on ` +
+            `every tunnel restart) and that the backend is actually running. ` +
             `Original error: ${err instanceof Error ? err.message : String(err)}`
         );
 
@@ -78,4 +92,29 @@ export async function api<T>(
     }
 
     return r.json();
+}
+
+async function probeReachable(): Promise<boolean> {
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    try {
+        // mode: "no-cors" gets an opaque response instead of throwing
+        // on a CORS mismatch — it only rejects if the request couldn't
+        // reach a server at all. That's the one thing being checked
+        // here; the response content itself is intentionally unusable.
+        await fetch(API_URL + "/health", {
+            mode: "no-cors",
+            signal: controller.signal,
+        });
+
+        return true;
+
+    } catch {
+        return false;
+
+    } finally {
+        clearTimeout(timeout);
+    }
 }

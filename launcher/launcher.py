@@ -1,46 +1,92 @@
 from __future__ import annotations
 
-from launcher.process_manager import ProcessManager
-from launcher.tunnel import Tunnel
+import threading
+
+from launcher.cleanup import Cleanup
+from launcher.dependency_check import DependencyCheck
 from launcher.env_manager import EnvManager
 from launcher.healthcheck import HealthCheck
-from launcher.utils import print_title
+from launcher.launcher_config import (
+    BACKEND_HOST,
+    BACKEND_PORT,
+    BACKEND_TUNNEL_PORT,
+    FRONTEND_TUNNEL_PORT,
+)
+from launcher.logger import failure, info, success
+from launcher.process_manager import ProcessManager
+from launcher.tunnel import Tunnel
+from launcher.utils import (
+    print_title,
+    wait_port,
+)
 
 
 class Launcher:
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.pm = ProcessManager()
 
-        self.backend_tunnel = None
-        self.frontend_tunnel = None
+        self.backend_tunnel: Tunnel | None = None
+        self.frontend_tunnel: Tunnel | None = None
 
-    # --------------------------------------------------
+        self.backend_url: str | None = None
+        self.frontend_url: str | None = None
 
-    def start(self):
+        self._startup_lock = threading.Lock()
+        self._startup_completed = False
+
+        self._shutdown = threading.Event()
+
+    # =========================================================
+
+    def start(self) -> None:
 
         print_title("ROYAL64 LAUNCHER")
 
-        # ----------------------------
+        Cleanup.run()
+
+        if not DependencyCheck.check():
+            failure("Dependency check failed.")
+            return
+
+        # -----------------------------
+        # Backend
+        # -----------------------------
 
         if not self.pm.start_backend():
             return
 
-        self.backend_tunnel = Tunnel(8000).start()
+        # -----------------------------
+        # Backend Tunnel
+        # -----------------------------
 
-        backend_url = self.backend_tunnel.wait_until_ready()
+        info("Creating Backend Tunnel...")
 
-        if backend_url is None:
+        self.backend_tunnel = Tunnel(
+            BACKEND_TUNNEL_PORT,
+            "Backend",
+        ).start()
+
+        self.backend_url = self.backend_tunnel.wait_until_ready()
+
+        if self.backend_url is None:
+            failure("Backend tunnel failed.")
             return
 
-        # ----------------------------
+        success(f"Backend tunnel -> {self.backend_url}")
+
+        # -----------------------------
+        # Frontend .env
+        # -----------------------------
 
         EnvManager.update_frontend(
-            backend_url,
+            self.backend_url,
         )
 
-        # ----------------------------
+        # -----------------------------
+        # Frontend
+        # -----------------------------
 
         if not self.pm.build_frontend():
             return
@@ -48,87 +94,111 @@ class Launcher:
         if not self.pm.start_frontend():
             return
 
-        self.frontend_tunnel = Tunnel(4173).start()
+        # -----------------------------
+        # Frontend Tunnel
+        # -----------------------------
 
-        frontend_url = self.frontend_tunnel.wait_until_ready()
+        info("Creating Frontend Tunnel...")
 
-        if frontend_url is None:
+        self.frontend_tunnel = Tunnel(
+            FRONTEND_TUNNEL_PORT,
+            "Frontend",
+        ).start()
+
+        self.frontend_url = self.frontend_tunnel.wait_until_ready()
+
+        if self.frontend_url is None:
+            failure("Frontend tunnel failed.")
             return
 
-        # ----------------------------
+        success(f"Frontend tunnel -> {self.frontend_url}")
+
+        # -----------------------------
+        # Backend .env
+        # -----------------------------
 
         EnvManager.update_backend(
-            frontend_url,
+            self.frontend_url,
         )
 
-        # ----------------------------
+        # -----------------------------
+        # Restart Backend
+        # -----------------------------
 
-        print_title("Restart Backend")
+        info("Restarting Backend...")
 
-        self.pm.stop_backend()
-
-        if not self.pm.start_backend():
+        if not self.pm.restart_backend():
+            failure("Backend restart failed.")
             return
 
-        # ----------------------------
+        if not wait_port(
+            BACKEND_HOST,
+            BACKEND_PORT,
+            timeout=30,
+        ):
+            failure("Backend did not become ready.")
+            return
 
-        print_title("Restart Bot")
+        success("Backend restarted.")
 
-        self.pm.stop_bot()
+        # -----------------------------
+        # Bot
+        # -----------------------------
 
-        self.pm.start_bot()
+        info("Starting Telegram Bot...")
 
-        # ----------------------------
+        if not self.pm.start_bot():
+            failure("Bot failed.")
+            return
+
+        # -----------------------------
+        # Health
+        # -----------------------------
 
         HealthCheck(
-            backend_url=backend_url,
-            frontend_url=frontend_url,
+            backend_url=self.backend_url,
+            frontend_url=self.frontend_url,
         ).check_all()
 
-        # ----------------------------
+        self._print_summary()
 
-        print()
-
-        print("=" * 60)
-
-        print("Backend")
-
-        print(backend_url)
-
-        print()
-
-        print("Frontend")
-
-        print(frontend_url)
-
-        print("=" * 60)
-
-        print()
-
-        print("Press Ctrl+C to stop...")
+        info("Royal64 is running...")
+        info("Press Ctrl+C to stop.")
 
         self.wait_forever()
 
-    # --------------------------------------------------
+    # =========================================================
 
-    def wait_forever(self):
-
-        try:
-
-            while True:
-                pass
-
-        except KeyboardInterrupt:
-
-            self.stop()
-
-    # --------------------------------------------------
-
-    def stop(self):
+    def _print_summary(self) -> None:
 
         print()
+        print("=" * 70)
+        print("ROYAL64 READY")
+        print()
+        print(f"Backend : {self.backend_url}")
+        print(f"Frontend: {self.frontend_url}")
+        print("Bot      : Running")
+        print("Health   : OK")
+        print("=" * 70)
+        print()
 
-        print("Stopping...")
+    # =========================================================
+
+    def wait_forever(self) -> None:
+
+        try:
+            self._shutdown.wait()
+
+        except KeyboardInterrupt:
+            self.stop()
+
+    # =========================================================
+
+    def stop(self) -> None:
+
+        info("Stopping launcher...")
+
+        self._shutdown.set()
 
         self.pm.stop_all()
 
@@ -137,3 +207,5 @@ class Launcher:
 
         if self.frontend_tunnel:
             self.frontend_tunnel.stop()
+
+        success("Launcher stopped.")

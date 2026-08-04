@@ -34,14 +34,21 @@ app = FastAPI(
 )
 
 # Without this, every browser request from the frontend (a different
-# origin — different port locally, a whole different ngrok domain when
+# origin — different port locally, a whole different tunnel domain when
 # testing from a phone) gets blocked by the browser itself before it
 # even reaches any route here. This was missing entirely, which reads
 # to the frontend as "the backend isn't responding" with no useful
 # error, not as an auth problem.
+#
+# allow_origin_regex additionally covers dev tunnels (Cloudflare's
+# quick tunnels, ngrok) automatically — those generate a brand new
+# random subdomain every single restart, so requiring CORS_ORIGINS to
+# be hand-updated every time was a guaranteed-to-recur failure. A real
+# production domain still goes through the explicit CORS_ORIGINS list.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()],
+    allow_origin_regex=r"https://.*\.(trycloudflare\.com|ngrok-free\.app|ngrok\.io)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

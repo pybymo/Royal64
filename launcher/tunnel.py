@@ -1,96 +1,168 @@
 from __future__ import annotations
 
+import queue
 import re
 import threading
-from pathlib import Path
+import time
+from subprocess import Popen
 
-from launcher.utils import run_background, ok, fail
+from launcher.launcher_config import CLOUDFLARED_PATH
+from launcher.logger import failure, info, success
+from launcher.utils import run_background
 
 
-CLOUDFLARED = Path(r"C:\tools\cloudflared\cloudflared-windows-amd64.exe")
+URL_PATTERN = re.compile(r"https://[^\s|]+\.trycloudflare\.com")
 
 
 class Tunnel:
-
-    def __init__(self, port: int):
+    def __init__(
+        self,
+        port: int,
+        name: str,
+    ) -> None:
 
         self.port = port
-        self.url = None
-        self.proc = None
+        self.name = name
 
-    # -----------------------------------------------------
+        self.process: Popen | None = None
 
-    def start(self):
+        self.url: str | None = None
 
-        if not CLOUDFLARED.exists():
-            raise FileNotFoundError(
-                f"cloudflared not found:\n{CLOUDFLARED}"
-            )
+        self._ready = threading.Event()
+        self._stop = threading.Event()
 
-        self.proc = run_background(
+        self._queue: queue.Queue[str] = queue.Queue()
+
+        self._reader_thread: threading.Thread | None = None
+        self._parser_thread: threading.Thread | None = None
+
+    # ==================================================
+
+    def start(self) -> "Tunnel":
+
+        self.process = run_background(
             [
-                str(CLOUDFLARED),
+                str(CLOUDFLARED_PATH),
                 "tunnel",
                 "--url",
-                f"http://localhost:{self.port}",
+                f"http://127.0.0.1:{self.port}",
             ]
         )
 
-        thread = threading.Thread(
-            target=self._watch_output,
+        self._reader_thread = threading.Thread(
+            target=self._reader,
             daemon=True,
+            name=f"{self.name}TunnelReader",
         )
 
-        thread.start()
+        self._parser_thread = threading.Thread(
+            target=self._parser,
+            daemon=True,
+            name=f"{self.name}TunnelParser",
+        )
+
+        self._reader_thread.start()
+        self._parser_thread.start()
 
         return self
 
-    # -----------------------------------------------------
+    # ==================================================
 
-    def _watch_output(self):
+    def _reader(self) -> None:
 
-        pattern = re.compile(
-            r"https://[a-zA-Z0-9\-\.]+\.trycloudflare\.com"
-        )
+        if (
+            self.process is None
+            or self.process.stdout is None
+        ):
+            return
 
-        for line in self.proc.stdout:
+        while not self._stop.is_set():
 
-            line = line.strip()
+            line = self.process.stdout.readline()
 
-            print(f"[Tunnel:{self.port}] {line}")
+            if line == "":
 
-            m = pattern.search(line)
+                if self.process.poll() is not None:
+                    break
 
-            if m and self.url is None:
+                time.sleep(0.1)
+                continue
 
-                self.url = m.group(0)
+            self._queue.put(line.rstrip())
 
-                ok(f"Tunnel {self.port}")
+    # ==================================================
 
-                ok(self.url)
+    def _parser(self) -> None:
 
-    # -----------------------------------------------------
+        while not self._stop.is_set():
 
-    def wait_until_ready(self, timeout=30):
+            try:
+                line = self._queue.get(timeout=0.5)
 
-        import time
+            except queue.Empty:
 
-        start = time.time()
+                if (
+                    self.process is not None
+                    and self.process.poll() is not None
+                ):
+                    break
 
-        while time.time() - start < timeout:
+                continue
 
-            if self.url:
-                return self.url
+            info(f"[Tunnel:{self.name}] {line}")
 
-            time.sleep(0.5)
+            if self.url is None:
 
-        fail(f"Tunnel {self.port} timeout")
+                match = URL_PATTERN.search(line)
+
+                if match:
+
+                    self.url = match.group(0)
+
+                    success(f"{self.name} Tunnel Ready")
+                    success(self.url)
+
+                    self._ready.set()
+
+    # ==================================================
+
+    def wait_until_ready(
+        self,
+        timeout: int = 120,
+    ) -> str | None:
+
+        if self._ready.wait(timeout):
+            return self.url
+
+        failure(f"{self.name} tunnel timeout")
 
         return None
 
-    # -----------------------------------------------------
+    # ==================================================
 
-    def stop(self):
+    def is_ready(self) -> bool:
 
-        if self.proc and self.proc.poll() is None:
-            self.proc.kill()
+        return self._ready.is_set()
+
+    # ==================================================
+
+    def stop(self) -> None:
+
+        self._stop.set()
+
+        if self.process is None:
+            return
+
+        try:
+
+            self.process.terminate()
+            self.process.wait(timeout=5)
+
+        except Exception:
+
+            try:
+                self.process.kill()
+            except Exception:
+                pass
+
+        self.process = None
